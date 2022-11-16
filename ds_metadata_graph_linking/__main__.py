@@ -7,7 +7,8 @@ import numpy as np
 from tqdm import tqdm
 from sklearn.metrics import f1_score, precision_score, recall_score
 
-from ds_metadata_graph_linking.dataset.factory import create_dataloader, create_dataset, split_data
+from ds_metadata_graph_linking.dataset.factory import create_dataloader, create_dataset, split_data, \
+    create_graph_dataset_from_raw
 from ds_metadata_graph_linking.model.manager import ModelManager
 from ds_metadata_graph_linking.trainer.config import load_config
 from ds_metadata_graph_linking.trainer.criterion import CriterionManager
@@ -205,6 +206,12 @@ def train_entrypoint(config, dataset_path, checkpoints_path, debug):
                        test_labels, test_logits, test_loss)
 
         save(checkpoints_path, model, optimizer)
+
+
+@cli.command(name='create_dataset')
+@click.option('--sample_size', type=click.INT, required=True)
+def create_dataset_from_raw(sample_size):
+    create_graph_dataset_from_raw(sample_size=sample_size)
 
 
 if __name__ == '__main__':
