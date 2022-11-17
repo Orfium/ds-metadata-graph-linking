@@ -226,21 +226,21 @@ def create_graph_dataset_from_raw(sample_size: int, raw_data: str, dataset_to_sa
 
     # entities
 
-    artists = pd.read_csv(os.path.join(dataset_to_save, 'artists_sample.csv'))
-    recordings = pd.read_csv(os.path.join(dataset_to_save, 'recordings_sample.csv'))
-    compositions = pd.read_csv(os.path.join(dataset_to_save, 'compositions_sample.csv'))
-    clients = pd.read_csv(os.path.join(dataset_to_save, 'client_sample.csv'))
-    iswcs = pd.read_csv(os.path.join(dataset_to_save, 'iswcs_sample.csv'))
-    isrcs = pd.read_csv(os.path.join(dataset_to_save, 'isrcs_sample.csv'))
+    artists = pd.read_csv(os.path.join(dataset_to_save, 'nodes/artists_sample.csv'))
+    recordings = pd.read_csv(os.path.join(dataset_to_save, 'nodes/recordings_sample.csv'))
+    compositions = pd.read_csv(os.path.join(dataset_to_save, 'nodes/compositions_sample.csv'))
+    clients = pd.read_csv(os.path.join(dataset_to_save, 'nodes/client_sample.csv'))
+    iswcs = pd.read_csv(os.path.join(dataset_to_save, 'nodes/iswcs_sample.csv'))
+    isrcs = pd.read_csv(os.path.join(dataset_to_save, 'nodes/isrcs_sample.csv'))
 
     # relationships
 
-    embedded = pd.read_csv(os.path.join(dataset_to_save, 'embedded_sample.csv'))
-    has_isrc = pd.read_csv(os.path.join(dataset_to_save, 'has_isrc_sample.csv'))
-    has_iswc = pd.read_csv(os.path.join(dataset_to_save, 'has_iswc_sample.csv'))
-    owns = pd.read_csv(os.path.join(dataset_to_save, 'owns_sample.csv'))
-    performed = pd.read_csv(os.path.join(dataset_to_save, 'performed_sample.csv'))
-    wrote = pd.read_csv(os.path.join(dataset_to_save, 'wrote_sample.csv'))
+    embedded = pd.read_csv(os.path.join(dataset_to_save, 'relations/embedded_sample.csv'))
+    has_isrc = pd.read_csv(os.path.join(dataset_to_save, 'relations/has_isrc_sample.csv'))
+    has_iswc = pd.read_csv(os.path.join(dataset_to_save, 'relations/has_iswc_sample.csv'))
+    owns = pd.read_csv(os.path.join(dataset_to_save, 'relations/owns_sample.csv'))
+    performed = pd.read_csv(os.path.join(dataset_to_save, 'relations/performed_sample.csv'))
+    wrote = pd.read_csv(os.path.join(dataset_to_save, 'relations/wrote_sample.csv'))
 
     print(f'Generating indexes for relations')
     generate_indexes_for_relations(compositions=compositions, recordings=recordings, clients=clients, iswcs=iswcs,
@@ -249,12 +249,12 @@ def create_graph_dataset_from_raw(sample_size: int, raw_data: str, dataset_to_sa
 
     # relationships
 
-    embedded = pd.read_csv(os.path.join(dataset_to_save, 'embedded_sample.csv'))
-    has_isrc = pd.read_csv(os.path.join(dataset_to_save, 'has_isrc_sample.csv'))
-    has_iswc = pd.read_csv(os.path.join(dataset_to_save, 'has_iswc_sample.csv'))
-    owns = pd.read_csv(os.path.join(dataset_to_save, 'owns_sample.csv'))
-    performed = pd.read_csv(os.path.join(dataset_to_save, 'performed_sample.csv'))
-    wrote = pd.read_csv(os.path.join(dataset_to_save, 'wrote_sample.csv'))
+    embedded = pd.read_csv(os.path.join(dataset_to_save, 'relations/embedded_sample.csv'))
+    has_isrc = pd.read_csv(os.path.join(dataset_to_save, 'relations/has_isrc_sample.csv'))
+    has_iswc = pd.read_csv(os.path.join(dataset_to_save, 'relations/has_iswc_sample.csv'))
+    owns = pd.read_csv(os.path.join(dataset_to_save, 'relations/owns_sample.csv'))
+    performed = pd.read_csv(os.path.join(dataset_to_save, 'relations/performed_sample.csv'))
+    wrote = pd.read_csv(os.path.join(dataset_to_save, 'relations/wrote_sample.csv'))
 
     print()
     print('Graph Statistics')

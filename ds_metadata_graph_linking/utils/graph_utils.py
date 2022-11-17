@@ -33,18 +33,18 @@ def sample_graph(compositions: pd.DataFrame, recordings: pd.DataFrame, clients: 
     artists_sample = to_find_artists
 
     # save to csv
-    compositions_sample.to_csv(os.path.join(dataset_to_save, 'compositions_sample.csv'), index=False)
-    has_iswc_sample.to_csv(os.path.join(dataset_to_save, 'has_iswc_sample.csv'), index=False)
-    iswcs_sample.to_csv(os.path.join(dataset_to_save, 'iswcs_sample.csv'), index=False)
-    embedded_sample.to_csv(os.path.join(dataset_to_save, 'embedded_sample.csv'), index=False)
-    recordings_sample.to_csv(os.path.join(dataset_to_save, 'recordings_sample.csv'), index=False)
-    has_isrc_sample.to_csv(os.path.join(dataset_to_save, 'has_isrc_sample.csv'), index=False)
-    isrcs_sample.to_csv(os.path.join(dataset_to_save, 'isrcs_sample.csv'), index=False)
-    owns_sample.to_csv(os.path.join(dataset_to_save, 'owns_sample.csv'), index=False)
-    client_sample.to_csv(os.path.join(dataset_to_save, 'client_sample.csv'), index=False)
-    performed_sample.to_csv(os.path.join(dataset_to_save, 'performed_sample.csv'), index=False)
-    wrote_sample.to_csv(os.path.join(dataset_to_save, 'wrote_sample.csv'), index=False)
-    artists_sample.to_csv(os.path.join(dataset_to_save, 'artists_sample.csv'), index=False)
+    compositions_sample.to_csv(os.path.join(dataset_to_save, 'nodes/compositions_sample.csv'), index=False)
+    has_iswc_sample.to_csv(os.path.join(dataset_to_save, 'relations/has_iswc_sample.csv'), index=False)
+    iswcs_sample.to_csv(os.path.join(dataset_to_save, 'nodes/iswcs_sample.csv'), index=False)
+    embedded_sample.to_csv(os.path.join(dataset_to_save, 'relations/embedded_sample.csv'), index=False)
+    recordings_sample.to_csv(os.path.join(dataset_to_save, 'nodes/recordings_sample.csv'), index=False)
+    has_isrc_sample.to_csv(os.path.join(dataset_to_save, 'relations/has_isrc_sample.csv'), index=False)
+    isrcs_sample.to_csv(os.path.join(dataset_to_save, 'nodes/isrcs_sample.csv'), index=False)
+    owns_sample.to_csv(os.path.join(dataset_to_save, 'relations/owns_sample.csv'), index=False)
+    client_sample.to_csv(os.path.join(dataset_to_save, 'nodes/client_sample.csv'), index=False)
+    performed_sample.to_csv(os.path.join(dataset_to_save, 'relations/performed_sample.csv'), index=False)
+    wrote_sample.to_csv(os.path.join(dataset_to_save, 'relations/wrote_sample.csv'), index=False)
+    artists_sample.to_csv(os.path.join(dataset_to_save, 'nodes/artists_sample.csv'), index=False)
 
 
 def generate_graph_statistics(compositions: pd.DataFrame, recordings: pd.DataFrame, clients: pd.DataFrame,
@@ -108,34 +108,34 @@ def generate_indexes_for_relations(compositions: pd.DataFrame, recordings: pd.Da
     embedded = embedded.merge(compositions[['share_asset_id', 'compositions_index']], on='share_asset_id')
     embedded = embedded.merge(recordings[['assetID', 'recordings_index']], on='assetID')
     embedded = embedded.drop(columns=['share_asset_id', 'assetID'])
-    embedded.to_csv(os.path.join(dataset_to_save, 'embedded_sample.csv'), index=False)
+    embedded.to_csv(os.path.join(dataset_to_save, 'relations/embedded_sample.csv'), index=False)
 
     # has_isrc relation
     has_isrc = has_isrc.merge(recordings[['assetID', 'recordings_index']], on='assetID')
     has_isrc = has_isrc.merge(isrcs[['isrc', 'isrcs_index']], on='isrc')
     has_isrc = has_isrc.drop(columns=['assetID', 'isrc'])
-    has_isrc.to_csv(os.path.join(dataset_to_save, 'has_isrc_sample.csv'), index=False)
+    has_isrc.to_csv(os.path.join(dataset_to_save, 'relations/has_isrc_sample.csv'), index=False)
 
     # has_iswc relation
     has_iswc = has_iswc.merge(compositions[['share_asset_id', 'compositions_index']], on='share_asset_id')
     has_iswc = has_iswc.merge(iswcs[['iswc', 'iswcs_index']], on='iswc')
     has_iswc = has_iswc.drop(columns=['share_asset_id', 'iswc'])
-    has_iswc.to_csv(os.path.join(dataset_to_save, 'has_iswc_sample.csv'), index=False)
+    has_iswc.to_csv(os.path.join(dataset_to_save, 'relations/has_iswc_sample.csv'), index=False)
 
     # owns relation
     owns = owns.merge(clients[['client_name', 'clients_index']], on='client_name')
     owns = owns.merge(compositions[['share_asset_id', 'compositions_index']], on='share_asset_id')
     owns = owns.drop(columns=['share_asset_id', 'client_name', 'custom_id', 'share', 'policy'])
-    owns.to_csv(os.path.join(dataset_to_save, 'owns_sample.csv'), index=False)
+    owns.to_csv(os.path.join(dataset_to_save, 'relations/owns_sample.csv'), index=False)
 
     # performed relation
     performed = performed.merge(artists[['name', 'artists_index']], on='name')
     performed = performed.merge(recordings[['assetID', 'recordings_index']], on='assetID')
     performed = performed.drop(columns=['name', 'assetID'])
-    performed.to_csv(os.path.join(dataset_to_save, 'performed_sample.csv'), index=False)
+    performed.to_csv(os.path.join(dataset_to_save, 'relations/performed_sample.csv'), index=False)
 
     # wrote relation
     wrote = wrote.merge(artists[['name', 'artists_index']], on='name')
     wrote = wrote.merge(compositions[['share_asset_id', 'compositions_index']], on='share_asset_id')
     wrote = wrote.drop(columns=['share_asset_id', 'name'])
-    wrote.to_csv(os.path.join(dataset_to_save, 'wrote_sample.csv'), index=False)
+    wrote.to_csv(os.path.join(dataset_to_save, 'relations/wrote_sample.csv'), index=False)
