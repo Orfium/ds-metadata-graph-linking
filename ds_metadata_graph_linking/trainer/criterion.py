@@ -11,5 +11,8 @@ class CriterionManager:
         self.loss = self.loss_function(logits, labels)
         return self.loss.item()
 
+    def empty_loss_cache(self):
+        self.loss = None
+
     def update_gradients(self):
         self.loss.backward()

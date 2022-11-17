@@ -64,6 +64,7 @@ def train_epoch(total_steps, epoch, config, model, optimizer, criterion, train_d
         report_step(config, epoch, index, total_loss, total_f1_score,
                     total_examples, total_steps, progress_bar)
 
+    criterion.empty_loss_cache()
     torch.cuda.empty_cache()  # avoid cuda memory errors
 
     return total_steps, total_loss / total_examples, total_f1_score / total_examples
@@ -101,7 +102,8 @@ def val_epoch(total_steps, epoch, config, model, criterion, val_dataloader):
 
         total_steps += 1
 
-    torch.cuda.empty_cache()
+    criterion.empty_loss_cache()
+    torch.cuda.empty_cache()  # avoid cuda memory errors
 
     return total_steps, total_loss / total_examples, total_f1_score / total_examples
 
@@ -124,6 +126,7 @@ def test(config, data, model, criterion):
     labels = edge_label.cpu().numpy()
     scores = infer_scores_from_logits(logits).cpu().numpy()
 
+    criterion.empty_loss_cache()
     torch.cuda.empty_cache()  # avoid cuda memory errors
 
     return labels, scores, loss
