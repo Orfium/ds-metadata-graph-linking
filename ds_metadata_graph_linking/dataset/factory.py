@@ -8,6 +8,10 @@ from torch_geometric.data import HeteroData
 from torch_geometric.loader import LinkNeighborLoader
 
 from ds_metadata_graph_linking.utils.edges import Edges
+from ds_metadata_graph_linking.utils.graph_utils import sample_graph, generate_graph_statistics, \
+    generate_indexes_for_relations
+from ds_metadata_graph_linking.utils.generate_features import generate_features_recordings, generate_features_artists, \
+    generate_features_clients, generate_features_compositions, generate_features_isrcs, generate_features_iswcs
 
 
 def create_toy_r2c_dataset():
@@ -190,3 +194,85 @@ def create_dataloader(config, dataset, edge_label_index, neg_sampling_ratio, edg
         edge_label_index=edge_label_index,
         num_workers=config.num_workers, persistent_workers=True
     )
+
+
+def create_graph_dataset_from_raw(sample_size: int, raw_data: str, dataset_to_save: str):
+    print('Loading raw data')
+    # entities
+
+    artists = pd.read_csv(os.path.join(raw_data, 'artist.csv'))
+    artists = artists.dropna(subset=['name'])
+    recordings = pd.read_csv(os.path.join(raw_data, 'recording.csv'))
+    recordings = recordings.dropna(subset=['recording_title'])
+    compositions = pd.read_csv(os.path.join(raw_data, 'composition.csv'))
+    compositions = compositions.dropna(subset=['composition_title'])
+    clients = pd.read_csv(os.path.join(raw_data, 'client.csv'))
+    iswcs = pd.read_csv(os.path.join(raw_data, 'iswc.csv'))
+    isrcs = pd.read_csv(os.path.join(raw_data, 'isrc.csv'))
+
+    # relationships
+
+    embedded = pd.read_csv(os.path.join(raw_data, 'embedded.csv'))
+    has_isrc = pd.read_csv(os.path.join(raw_data, 'has_isrc.csv'))
+    has_iswc = pd.read_csv(os.path.join(raw_data, 'has_iswc.csv'))
+    owns = pd.read_csv(os.path.join(raw_data, 'owns.csv'))
+    performed = pd.read_csv(os.path.join(raw_data, 'performed.csv'))
+    wrote = pd.read_csv(os.path.join(raw_data, 'wrote.csv'))
+
+    print(f'Sampling graph with base composition number {sample_size}')
+    sample_graph(compositions=compositions, recordings=recordings, clients=clients, iswcs=iswcs, isrcs=isrcs,
+                 embedded=embedded, performed=performed, wrote=wrote, has_isrc=has_isrc, has_iswc=has_iswc, owns=owns,
+                 compositions_to_sample=sample_size, dataset_to_save=dataset_to_save)
+
+    # entities
+
+    artists = pd.read_csv(os.path.join(dataset_to_save, 'artists_sample.csv'))
+    recordings = pd.read_csv(os.path.join(dataset_to_save, 'recordings_sample.csv'))
+    compositions = pd.read_csv(os.path.join(dataset_to_save, 'compositions_sample.csv'))
+    clients = pd.read_csv(os.path.join(dataset_to_save, 'client_sample.csv'))
+    iswcs = pd.read_csv(os.path.join(dataset_to_save, 'iswcs_sample.csv'))
+    isrcs = pd.read_csv(os.path.join(dataset_to_save, 'isrcs_sample.csv'))
+
+    # relationships
+
+    embedded = pd.read_csv(os.path.join(dataset_to_save, 'embedded_sample.csv'))
+    has_isrc = pd.read_csv(os.path.join(dataset_to_save, 'has_isrc_sample.csv'))
+    has_iswc = pd.read_csv(os.path.join(dataset_to_save, 'has_iswc_sample.csv'))
+    owns = pd.read_csv(os.path.join(dataset_to_save, 'owns_sample.csv'))
+    performed = pd.read_csv(os.path.join(dataset_to_save, 'performed_sample.csv'))
+    wrote = pd.read_csv(os.path.join(dataset_to_save, 'wrote_sample.csv'))
+
+    print(f'Generating indexes for relations')
+    generate_indexes_for_relations(compositions=compositions, recordings=recordings, clients=clients, iswcs=iswcs,
+                                   isrcs=isrcs, embedded=embedded, performed=performed, wrote=wrote, has_isrc=has_isrc,
+                                   has_iswc=has_iswc, owns=owns, artists=artists, dataset_to_save=dataset_to_save)
+
+    # relationships
+
+    embedded = pd.read_csv(os.path.join(dataset_to_save, 'embedded_sample.csv'))
+    has_isrc = pd.read_csv(os.path.join(dataset_to_save, 'has_isrc_sample.csv'))
+    has_iswc = pd.read_csv(os.path.join(dataset_to_save, 'has_iswc_sample.csv'))
+    owns = pd.read_csv(os.path.join(dataset_to_save, 'owns_sample.csv'))
+    performed = pd.read_csv(os.path.join(dataset_to_save, 'performed_sample.csv'))
+    wrote = pd.read_csv(os.path.join(dataset_to_save, 'wrote_sample.csv'))
+
+    print()
+    print('Graph Statistics')
+    generate_graph_statistics(compositions=compositions, recordings=recordings, clients=clients, iswcs=iswcs,
+                              isrcs=isrcs, embedded=embedded, performed=performed, wrote=wrote, has_isrc=has_isrc,
+                              has_iswc=has_iswc, owns=owns, artists=artists)
+
+    print()
+    print('Generating Features for different nodes')
+    print('Recordings')
+    generate_features_recordings(recordings, dataset_to_save)
+    print('Compositions')
+    generate_features_compositions(compositions, dataset_to_save)
+    print('Iswcs')
+    generate_features_iswcs(iswcs, dataset_to_save)
+    print('Isrcs')
+    generate_features_isrcs(isrcs, dataset_to_save)
+    print('Artists')
+    generate_features_artists(artists, dataset_to_save)
+    print('Clients')
+    generate_features_clients(clients, dataset_to_save)
