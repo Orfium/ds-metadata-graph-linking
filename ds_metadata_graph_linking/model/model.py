@@ -1,10 +1,11 @@
+from ds_metadata_graph_linking.model.gnn import GNN
 from ds_metadata_graph_linking.utils.edges import Edges
 
 
 class Model:
     def __init__(self, config, dataset, dataloader):
         self.config = config
-        self.model = ModelRegistry.get_model(self.config.architecture, config, dataset)
+        self.model = GNN(config, dataset)
         self.lazy_initialization(dataloader)
 
     def __call__(self, *args, **kwargs):
@@ -33,19 +34,3 @@ class Model:
         batch = next(iter(dataloader))
         batch = batch.to(self.config.device)
         self.model(batch.x_dict, batch.edge_index_dict, batch[Edges.edge_to_predict].edge_label_index)
-
-
-class ModelRegistry:
-    models = {}
-
-    @classmethod
-    def register_model(cls, model_name):
-        def func(model):
-            cls.models[model_name] = model
-            return model
-
-        return func
-
-    @classmethod
-    def get_model(cls, model_name, config, dataset, **kwargs):
-        return cls.models[model_name](config, dataset, **kwargs)

@@ -15,6 +15,28 @@ from ds_metadata_graph_linking.utils.graph import sample_graph, generate_graph_s
     generate_indexes_for_relations
 
 
+def create_toy_dataset():
+    data = HeteroData()
+
+    data['recording'].x = torch.rand((5, 128))
+    data['composition'].x = torch.rand((3, 128))
+    data['artist'].x = torch.rand((3, 128))
+    data['client'].x = torch.rand((1, 128))
+
+    data[('composition', 'embedded', 'recording')].edge_index = torch.tensor([[0, 2, 1], [1, 3, 4]])
+    data[('composition', 'embedded', 'recording')].edge_label_index = torch.tensor([[0, 2, 1], [1, 3, 4]])
+    data[('composition', 'embedded', 'recording')].edge_label = torch.tensor([1.0, 1.0, 1.0])
+
+    data[('client', 'owns', 'composition')].edge_index = torch.tensor([[0, 0, 0], [0, 1, 2]])
+    data[('artist', 'performed', 'recording')].edge_index = torch.tensor([[0, 0, 2, 1], [2, 1, 3, 0]])
+    data[('artist', 'wrote', 'composition')].edge_index = torch.tensor([[1, 0], [1, 2]])
+
+    transform = T.ToUndirected()
+    data = transform(data)
+
+    return data
+
+
 def create_dataset(dataset_path, split):
     return MetadataLinkingDataset(dataset_path, split)
 
@@ -134,32 +156,38 @@ def process_nodes(data, raw_graph_data):
     print(f'Processing recording nodes...')
     recordings_path = osp.join(raw_graph_data, 'node-feat', 'recording_features.csv')
     recordings = pd.read_csv(recordings_path, header=None, dtype=np.float32)
-    data['recording'].x = torch.from_numpy(recordings.values)
+    # data['recording'].x = torch.from_numpy(recordings.values)
+    data['recording'].x = torch.rand(recordings.values.shape)
 
     print(f'Processing composition nodes...')
     compositions_path = osp.join(raw_graph_data, 'node-feat', 'composition_features.csv')
     compositions = pd.read_csv(compositions_path, header=None, dtype=np.float32)
-    data['composition'].x = torch.from_numpy(compositions.values)
+    # data['composition'].x = torch.from_numpy(compositions.values)
+    data['composition'].x = torch.rand(compositions.values.shape)
 
     print(f'Processing artist nodes...')
     artists_path = osp.join(raw_graph_data, 'node-feat', 'artist_features.csv')
     artists = pd.read_csv(artists_path, header=None, dtype=np.float32)
-    data['artist'].x = torch.from_numpy(artists.values)
+    # data['artist'].x = torch.from_numpy(artists.values)
+    data['artist'].x = torch.rand(artists.values.shape)
 
     print(f'Processing isrc nodes...')
     isrcs_path = osp.join(raw_graph_data, 'node-feat', 'isrcs_features.csv')
     isrcs = pd.read_csv(isrcs_path, header=None, dtype=np.float32)
-    data['isrc'].x = torch.from_numpy(isrcs.values)
+    # data['isrc'].x = torch.from_numpy(isrcs.values)
+    data['isrc'].x = torch.rand(isrcs.values.shape)
 
     print(f'Processing iswc nodes...')
     iswcs_path = osp.join(raw_graph_data, 'node-feat', 'iswcs_features.csv')
     iswcs = pd.read_csv(iswcs_path, header=None, dtype=np.float32)
-    data['iswc'].x = torch.from_numpy(iswcs.values)
+    # data['iswc'].x = torch.from_numpy(iswcs.values)
+    data['iswc'].x = torch.rand(iswcs.values.shape)
 
     print(f'Processing client nodes...')
     clients_path = osp.join(raw_graph_data, 'node-feat', 'clients_features.csv')
     clients = pd.read_csv(clients_path, header=None, dtype=np.float32)
-    data['client'].x = torch.from_numpy(clients.values)
+    # data['client'].x = torch.from_numpy(clients.values)
+    data['client'].x = torch.rand(clients.values.shape)
 
 
 def process_relations(data, raw_graph_data, relations_dir='relations'):

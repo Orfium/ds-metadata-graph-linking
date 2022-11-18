@@ -7,18 +7,16 @@ from ds_metadata_graph_linking.utils.device import decide_device, Devices
 class TrainConfig:
     def __init__(self, **kwargs):
         self.seed = kwargs['train'].pop('seed', 666)
+        self.resume = kwargs['train'].pop('resume', False)
+        self.patience = kwargs['train'].pop('patience', 10)
         self.epochs = kwargs['train'].pop('num_epochs', 100)
         self.batch_size = kwargs['train'].pop('batch_size', 1)
-        self.log_every = kwargs['train'].pop('log_every', 10)
         self.model_log_freq = kwargs['train'].pop('model_log_freq', 100)
+        self.log_every_n_steps = kwargs['train'].pop('log_every_n_steps', 10)
 
-        self.num_val = kwargs['data'].pop('num_val', 0)
-        self.num_test = kwargs['data'].pop('num_test', 0)
-        self.num_workers = kwargs['data'].pop('num_workers', 1)
-        self.num_neighbors = kwargs['data'].pop('num_neighbors', [-1, -1])
-        self.neg_sampling_ratio = kwargs['data'].pop('neg_sampling_ratio', 0)
-        self.disjoint_train_ratio = kwargs['data'].pop('disjoint_train_ratio', 0)
-        self.neighbor_loader_neg_sampling_ratio = kwargs['data'].pop('neighbor_loader_neg_sampling_ratio', 0)
+        self.num_workers = kwargs['train'].pop('num_workers', 1)
+        self.num_neighbors = kwargs['train'].pop('num_neighbors', [-1, -1])
+        self.neighbor_loader_neg_sampling_ratio = kwargs['train'].pop('neighbor_loader_neg_sampling_ratio', 0)
 
         self.architecture = kwargs['model'].pop('architecture', 'gnn')
         self.num_labels = kwargs['model'].pop('num_labels', 1)
@@ -34,6 +32,9 @@ class TrainConfig:
         self.learning_rate = float(kwargs['optimizer'].pop('lr', 0.001))
 
         self.device = decide_device(kwargs['train'].pop('device', Devices.GPU))
+
+        self.dataset_path = kwargs['train']['dataset_path']
+        self.checkpoints_path = kwargs['train']['checkpoints_path']
 
     def __repr__(self):
         return pprint.pformat(self.__dict__)

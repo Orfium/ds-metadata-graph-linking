@@ -1,7 +1,7 @@
 import torch.nn as nn
 
 
-class CriterionManager:
+class Criterion:
     def __init__(self, config):
         self.loss = None
         self.config = config

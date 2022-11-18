@@ -4,10 +4,8 @@ from torch_geometric.nn import to_hetero
 
 from ds_metadata_graph_linking.model.decoder import Decoder
 from ds_metadata_graph_linking.model.encoder import Encoder
-from ds_metadata_graph_linking.model.model import ModelRegistry
 
 
-@ModelRegistry.register_model('gnn')
 class GNN(torch.nn.Module):
     def __init__(self, config, data):
         super().__init__()

@@ -1,7 +1,7 @@
 import torch
 
 
-class OptimizerManager:
+class Optimizer:
     def __init__(self, config, train_dataloader, model_manager):
         self.config = config
         self.epsilon = config.epsilon
