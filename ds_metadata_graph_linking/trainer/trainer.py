@@ -1,17 +1,15 @@
 import os
 import torch
 import wandb
-import numpy as np
 
 from tqdm import tqdm
-from sklearn.metrics import f1_score, precision_score, recall_score
+from sklearn.metrics import f1_score
 
 from ds_metadata_graph_linking.utils.edges import Edges
 from ds_metadata_graph_linking.utils.infer import infer_scores_from_logits, infer_predictions_from_logits
 
 
-def train(config, train_dataloader, val_dataloader,
-          val_data, test_data, model, optimizer, criterion, checkpoints_path):
+def train(config, train_dataloader, val_dataloader, model, optimizer, criterion, checkpoints_path):
     train_total_steps = 0
     val_total_steps = 0
     for epoch in range(1, config.epochs):
@@ -22,12 +20,7 @@ def train(config, train_dataloader, val_dataloader,
                                                                     model, criterion,
                                                                     val_dataloader)
 
-        test_labels, test_logits, test_loss = test(config, test_data, model, criterion)
-        val_labels, val_logits, val_loss = test(config, val_data, model, criterion)
-
-        report_epoch(epoch, train_loss, train_total_f1, val_loader_loss, val_loader_f1,
-                     val_labels, val_logits, val_loss,
-                     test_labels, test_logits, test_loss)
+        report_epoch(epoch, train_loss, train_total_f1, val_loader_loss, val_loader_f1)
 
         save(checkpoints_path, model, optimizer)
 
@@ -152,27 +145,11 @@ def report_step(config, epoch, index, total_loss, total_f1_score, total_examples
                                      f'train_batch_f1:{total_f1_score / total_examples}')
 
 
-def report_epoch(epoch, train_loss,
-                 train_total_f1, val_loader_loss, val_loader_f1,
-                 val_labels, val_logits, val_loss,
-                 test_labels, test_logits, test_loss):
-    test_preds = np.where(test_logits > 0.5, 1, 0)
-    val_preds = np.where(val_logits > 0.5, 1, 0)
-
-    wandb.sklearn.plot_confusion_matrix(test_labels, test_preds, [0, 1])
-
+def report_epoch(epoch, train_loss, train_total_f1, val_loader_loss, val_loader_f1, ):
     wandb.log({
         'epoch': epoch,
         f"train_loss": float(train_loss),
         f"train_total_f1": train_total_f1,
         f"val_loader_f1": val_loader_f1,
-        f"val_loader_loss": float(val_loader_loss),
-        f"val_loss": float(val_loss),
-        f"test_loss": float(test_loss),
-        f"val_f1_score": float(f1_score(val_labels, val_preds)),
-        f"test_f1_score": float(f1_score(test_labels, test_preds)),
-        f'val_recall_score': float(recall_score(val_labels, val_preds)),
-        f'val_precision_score': float(precision_score(val_labels, val_preds)),
-        f'test_recall_score': float(recall_score(test_labels, test_preds)),
-        f'test_precision_score': float(precision_score(test_labels, test_preds)),
+        f"val_loader_loss": float(val_loader_loss)
     })

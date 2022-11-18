@@ -20,6 +20,7 @@ class TrainConfig:
         self.disjoint_train_ratio = kwargs['data'].pop('disjoint_train_ratio', 0)
         self.neighbor_loader_neg_sampling_ratio = kwargs['data'].pop('neighbor_loader_neg_sampling_ratio', 0)
 
+        self.architecture = kwargs['model'].pop('architecture', 'gnn')
         self.num_labels = kwargs['model'].pop('num_labels', 1)
         self.aggr = kwargs['model'].pop('aggr', 'sum')
         self.out_channels = kwargs['model'].pop('out_channels', 64)

@@ -16,7 +16,7 @@ from ds_metadata_graph_linking.utils.graph import sample_graph, generate_graph_s
 
 
 def create_dataset(dataset_path, split):
-    dataset = MetadataLinkingDataset(dataset_path, split)
+    return MetadataLinkingDataset(dataset_path, split)
 
 
 def create_dataloader(config, dataset, edge_label_index, neg_sampling_ratio, edge_label=None, shuffle=True):
@@ -33,6 +33,7 @@ def create_dataloader(config, dataset, edge_label_index, neg_sampling_ratio, edg
 
 
 def create_raw_graph_data_from_raw(sample_size: int, raw_data: str, raw_graph_data: str):
+    print('Loadin raw data...')
     recordings = pd.read_csv(osp.join(raw_data, 'recording.csv'))
     recordings = recordings.dropna(subset=['recording_title'])
     compositions = pd.read_csv(osp.join(raw_data, 'composition.csv'))
@@ -101,8 +102,8 @@ def create_hetero_dataset_from_raw_graph_data(raw_graph_data, processed_data):
     torch.save(data, osp.join(processed_data, 'data.pt'))
 
 
-def split_hetero_data(processed_data, num_val, num_test, neg_sampling_ratio,
-                      disjoint_train_ratio, add_negative_train_samples):
+def train_test_split_hetero_dataset(processed_data, num_val, num_test, neg_sampling_ratio,
+                                    disjoint_train_ratio, add_negative_train_samples):
     data = torch.load(osp.join(processed_data, 'data.pt'))
 
     train_data, val_data, test_data = T.RandomLinkSplit(num_val=num_val,
