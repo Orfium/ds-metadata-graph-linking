@@ -2,6 +2,7 @@ import click
 import wandb
 
 from ds_metadata_graph_linking.dataset.factory import create_dataloader, create_dataset
+from ds_metadata_graph_linking.model.gnn import GNN
 from ds_metadata_graph_linking.model.model import Model
 from ds_metadata_graph_linking.trainer.config import load_config
 from ds_metadata_graph_linking.trainer.criterion import CriterionManager
@@ -22,19 +23,18 @@ def cli():
 @click.option('--config', type=click.STRING, required=True)
 @click.option('--dataset_path', type=click.STRING, required=True)
 @click.option('--checkpoints_path', type=click.STRING, required=True)
-@click.option('--debug/--no-debug', type=click.BOOL, default=False)
-def train_entrypoint(config, dataset_path, checkpoints_path, debug):
+def train_entrypoint(config, dataset_path, checkpoints_path):
     config = load_config(config, dataset_path, checkpoints_path)
     set_seed(config.seed)
 
-    train_dataset = create_dataset(dataset_path, split='train')
+    train_dataset = create_dataset(dataset_path, split='train').data
     train_edge_label_index = (Edges.edge_to_predict, train_dataset[Edges.edge_to_predict].edge_label_index)
     train_dataloader = create_dataloader(config=config,
                                          dataset=train_dataset,
                                          edge_label_index=train_edge_label_index,
                                          neg_sampling_ratio=config.neighbor_loader_neg_sampling_ratio)
 
-    val_dataset = create_dataset(dataset_path, split='val')
+    val_dataset = create_dataset(dataset_path, split='val').data
     val_edge_label_index = (Edges.edge_to_predict, val_dataset[Edges.edge_to_predict].edge_label_index)
     val_dataloader = create_dataloader(config=config,
                                        dataset=val_dataset,

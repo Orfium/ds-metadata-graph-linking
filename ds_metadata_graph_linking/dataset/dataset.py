@@ -7,7 +7,7 @@ from torch_geometric.data import InMemoryDataset
 class MetadataLinkingDataset(InMemoryDataset):
     def __init__(self, root, split, transform=None):
         super().__init__(root, transform, None)
-        self.data = torch.load(f'{split}_data.pt')
+        self.data = torch.load(osp.join(self.processed_dir, f'{split}_data.pt'))
 
     @property
     def raw_dir(self):

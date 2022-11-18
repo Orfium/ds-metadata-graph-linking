@@ -4,7 +4,7 @@ from ds_metadata_graph_linking.utils.edges import Edges
 class Model:
     def __init__(self, config, dataset, dataloader):
         self.config = config
-        self.model = ModelRegistry.get_model(self.config.architecture, dataset, dataloader)
+        self.model = ModelRegistry.get_model(self.config.architecture, config, dataset)
         self.lazy_initialization(dataloader)
 
     def __call__(self, *args, **kwargs):
@@ -47,5 +47,5 @@ class ModelRegistry:
         return func
 
     @classmethod
-    def get_model(cls, model_name, dataset, dataloader, **kwargs):
-        return cls.models[model_name](dataset, dataloader, **kwargs)
+    def get_model(cls, model_name, config, dataset, **kwargs):
+        return cls.models[model_name](config, dataset, **kwargs)

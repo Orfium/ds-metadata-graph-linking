@@ -33,7 +33,7 @@ def create_dataloader(config, dataset, edge_label_index, neg_sampling_ratio, edg
 
 
 def create_raw_graph_data_from_raw(sample_size: int, raw_data: str, raw_graph_data: str):
-    print('Loadin raw data...')
+    print('Loading raw data...')
     recordings = pd.read_csv(osp.join(raw_data, 'recording.csv'))
     recordings = recordings.dropna(subset=['recording_title'])
     compositions = pd.read_csv(osp.join(raw_data, 'composition.csv'))
@@ -96,14 +96,23 @@ def create_raw_graph_data_from_raw(sample_size: int, raw_data: str, raw_graph_da
 def create_hetero_dataset_from_raw_graph_data(raw_graph_data, processed_data):
     data = HeteroData()
 
+    print(f'Processing nodes...')
     process_nodes(data, raw_graph_data)
+
+    print(f'Processing relations...')
     process_relations(data, raw_graph_data)
 
-    torch.save(data, osp.join(processed_data, 'data.pt'))
+    transform = T.ToUndirected()
+    data = transform(data)
+
+    hetero_data_path = osp.join(processed_data, 'data.pt')
+    torch.save(data, hetero_data_path)
+    print(f'Hetero dataset was saved to {hetero_data_path}')
 
 
 def train_test_split_hetero_dataset(processed_data, num_val, num_test, neg_sampling_ratio,
                                     disjoint_train_ratio, add_negative_train_samples):
+    print(f'Loading hetero dataset...')
     data = torch.load(osp.join(processed_data, 'data.pt'))
 
     train_data, val_data, test_data = T.RandomLinkSplit(num_val=num_val,
@@ -118,49 +127,62 @@ def train_test_split_hetero_dataset(processed_data, num_val, num_test, neg_sampl
     torch.save(train_data, osp.join(processed_data, 'train_data.pt'))
     torch.save(val_data, osp.join(processed_data, 'val_data.pt'))
     torch.save(test_data, osp.join(processed_data, 'test_data.pt'))
+    print(f'Hetero dataset train/val/test splits were saved to {processed_data}')
 
 
 def process_nodes(data, raw_graph_data):
+    print(f'Processing recording nodes...')
     recordings_path = osp.join(raw_graph_data, 'node-feat', 'recording_features.csv')
     recordings = pd.read_csv(recordings_path, header=None, dtype=np.float32)
     data['recording'].x = torch.from_numpy(recordings.values)
 
+    print(f'Processing composition nodes...')
     compositions_path = osp.join(raw_graph_data, 'node-feat', 'composition_features.csv')
     compositions = pd.read_csv(compositions_path, header=None, dtype=np.float32)
     data['composition'].x = torch.from_numpy(compositions.values)
 
+    print(f'Processing artist nodes...')
     artists_path = osp.join(raw_graph_data, 'node-feat', 'artist_features.csv')
     artists = pd.read_csv(artists_path, header=None, dtype=np.float32)
     data['artist'].x = torch.from_numpy(artists.values)
 
+    print(f'Processing isrc nodes...')
     isrcs_path = osp.join(raw_graph_data, 'node-feat', 'isrcs_features.csv')
     isrcs = pd.read_csv(isrcs_path, header=None, dtype=np.float32)
     data['isrc'].x = torch.from_numpy(isrcs.values)
 
+    print(f'Processing iswc nodes...')
     iswcs_path = osp.join(raw_graph_data, 'node-feat', 'iswcs_features.csv')
     iswcs = pd.read_csv(iswcs_path, header=None, dtype=np.float32)
     data['iswc'].x = torch.from_numpy(iswcs.values)
 
+    print(f'Processing client nodes...')
     clients_path = osp.join(raw_graph_data, 'node-feat', 'clients_features.csv')
     clients = pd.read_csv(clients_path, header=None, dtype=np.float32)
     data['client'].x = torch.from_numpy(clients.values)
 
 
 def process_relations(data, raw_graph_data, relations_dir='relations'):
+    print(f'Processing composition_embedded_recording relation...')
     embedded = pd.read_csv(osp.join(raw_graph_data, relations_dir, 'embedded_sample.csv'))
     data[('composition', 'embedded', 'recording')].edge_index = torch.from_numpy(embedded.values).t().contiguous()
 
+    print(f'Processing recording_has_isrc_isrc relation...')
     has_isrc = pd.read_csv(osp.join(raw_graph_data, relations_dir, 'has_isrc_sample.csv'))
     data[('recording', 'has_isrc', 'isrc')].edge_index = torch.from_numpy(has_isrc.values).t().contiguous()
 
+    print(f'Processing composition_has_iswc_iswc relation...')
     has_iswc = pd.read_csv(osp.join(raw_graph_data, relations_dir, 'has_iswc_sample.csv'))
     data[('composition', 'has_iswc', 'iswc')].edge_index = torch.from_numpy(has_iswc.values).t().contiguous()
 
+    print(f'Processing client_owns_composition relation...')
     owns = pd.read_csv(osp.join(raw_graph_data, relations_dir, 'owns_sample.csv'))
     data[('client', 'owns', 'composition')].edge_index = torch.from_numpy(owns.values).t().contiguous()
 
+    print(f'Processing artist_performed_recording relation...')
     performed = pd.read_csv(osp.join(raw_graph_data, relations_dir, 'performed_sample.csv'))
     data[('artist', 'performed', 'recording')].edge_index = torch.from_numpy(performed.values).t().contiguous()
 
+    print(f'Processing artist_wrote_composition relation...')
     wrote = pd.read_csv(osp.join(raw_graph_data, relations_dir, 'wrote_sample.csv'))
     data[('artist', 'wrote', 'composition')].edge_index = torch.from_numpy(wrote.values).t().contiguous()

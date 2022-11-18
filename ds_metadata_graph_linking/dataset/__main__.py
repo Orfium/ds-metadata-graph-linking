@@ -25,12 +25,12 @@ def create_complete_hetero_data(sample_size, raw_data, raw_graph_data, processed
                                            raw_graph_data=raw_graph_data)
     factory.create_hetero_dataset_from_raw_graph_data(raw_graph_data=raw_graph_data,
                                                       processed_data=processed_data)
-    factory.split_hetero_data(processed_data=processed_data,
-                              num_val=num_val,
-                              num_test=num_test,
-                              neg_sampling_ratio=neg_sampling_ratio,
-                              disjoint_train_ratio=disjoint_train_ratio,
-                              add_negative_train_samples=add_negative_train_samples)
+    factory.train_test_split_hetero_dataset(processed_data=processed_data,
+                                            num_val=num_val,
+                                            num_test=num_test,
+                                            neg_sampling_ratio=neg_sampling_ratio,
+                                            disjoint_train_ratio=disjoint_train_ratio,
+                                            add_negative_train_samples=add_negative_train_samples)
 
 
 @cli.command(name='create_graph_data')
