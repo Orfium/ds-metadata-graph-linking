@@ -2,23 +2,23 @@ import os.path
 
 
 NodeHeader = {
-    "recording": "title,assetID,viewID",
+    "recording": "recording_title,assetID,viewID",
     "isrc": "isrc",
-    "composition": "share_asset_id,title",
+    "composition": "share_asset_id,composition_title",
     "artist": "name",
     "iswc": "iswc",
     "hfa_code": "code",
-    "client": "name",
+    "client": "client_name",
 }
 
 RelationshipHeader = {
-    "owns": "start_id,end_id,custom_id,share,policy",
-    "embedded": "start_id,end_id",
-    "has_isrc": "start_id,end_id",
-    "has_iswc": "start_id,end_id",
-    "has_hfa_code": "start_id,end_id",
-    "performed": "start_id,end_id",
-    "wrote": "start_id,end_id",
+    "owns": "client_name,share_asset_id,custom_id,share,policy",
+    "embedded": "share_asset_id,assetID",
+    "has_isrc": "assetID,isrc",
+    "has_iswc": "share_asset_id,iswc",
+    "has_hfa_code": "share_asset_id,hfa_code",
+    "performed": "name,assetID",
+    "wrote": "name,share_asset_id",
 }
 
 

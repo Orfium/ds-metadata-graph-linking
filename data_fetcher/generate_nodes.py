@@ -116,14 +116,16 @@ def process_shares(shares: pd.DataFrame):
 def main():
     load_dotenv()
     write_headers()
-    assets = pd.read_csv('data/asset_full.csv')
+    assets = pd.read_csv('asset_full_latest.csv')
     print('Read asset full')
     artists = IdSet("ar")
     process_assets(assets, artists)
     extract_artist_nodes(artists)
     print('Asset full processed')
-    shares = pd.read_csv('data/asset_share.csv')
+    shares = pd.read_csv('asset_share_latest.csv')
+    print('Read asset share')
     process_shares(shares)
+    print('Asset share processed')
 
 
 if __name__ == '__main__':
