@@ -22,7 +22,7 @@ RelationshipHeader = {
 }
 
 
-def write_headers():
+def write_headers(raw_data_path: str):
     for name, value in {**NodeHeader, **RelationshipHeader}.items():
-        with open(os.path.join("graph-nodes-rels", f"{name}.csv"), "w") as fp:
+        with open(os.path.join(raw_data_path, f"{name}.csv"), "w") as fp:
             fp.write(f"{value}\n")

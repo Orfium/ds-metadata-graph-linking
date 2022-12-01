@@ -25,7 +25,7 @@ class RelPath(Enum):
     OWNS = 'owns.csv'
 
 
-def export_csv(df: pd.DataFrame, path: Union[NodePath, RelPath]):
+def export_csv(df: pd.DataFrame, path: Union[NodePath, RelPath], raw_data_path: str):
     df = df.copy()
-    path = os.path.join("graph-nodes-rels", path.value)
+    path = os.path.join(raw_data_path, path.value)
     df.to_csv(path, index=False, header=False, mode='a')
