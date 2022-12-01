@@ -30,7 +30,7 @@ class FastTextFeaturizer(Featurizer):
             features = self.ft.get_sentence_vector(title)
             recording_title_features.append(features)
 
-        recording_title_features_path = osp.join(raw_graph_data, 'recording_features.csv')
+        recording_title_features_path = osp.join(raw_graph_data, 'node-feat', 'recording_features.csv')
         recording_title_features_df = pd.DataFrame(np.array(recording_title_features))
         recording_title_features_df.to_csv(recording_title_features_path, index=False, header=None)
 
@@ -42,7 +42,7 @@ class FastTextFeaturizer(Featurizer):
             features = self.ft.get_sentence_vector(title)
             composition_title_features.append(features)
 
-        composition_title_features_path = osp.join(raw_graph_data, 'composition_features.csv')
+        composition_title_features_path = osp.join(raw_graph_data, 'node-feat', 'composition_features.csv')
         composition_title_features_df = pd.DataFrame(np.array(composition_title_features))
         composition_title_features_df.to_csv(composition_title_features_path, index=False, header=None)
 
@@ -54,7 +54,7 @@ class FastTextFeaturizer(Featurizer):
             features = self.ft.get_sentence_vector(title)
             artist_features.append(features)
 
-        artist_features_path = osp.join(raw_graph_data, 'artist_features.csv')
+        artist_features_path = osp.join(raw_graph_data, 'node-feat', 'artist_features.csv')
         artist_features_df = pd.DataFrame(np.array(artist_features))
         artist_features_df.to_csv(artist_features_path, index=False, header=None)
 
@@ -66,7 +66,7 @@ class FastTextFeaturizer(Featurizer):
             features = self.ft.get_sentence_vector(title)
             isrcs_features.append(features)
 
-        isrcs_features_path = osp.join(raw_graph_data, 'isrcs_features.csv')
+        isrcs_features_path = osp.join(raw_graph_data, 'node-feat', 'isrcs_features.csv')
         isrcs_features_df = pd.DataFrame(np.array(isrcs_features))
         isrcs_features_df.to_csv(isrcs_features_path, index=False, header=None)
 
@@ -78,7 +78,7 @@ class FastTextFeaturizer(Featurizer):
             features = self.ft.get_sentence_vector(title)
             iswcs_features.append(features)
 
-        iswcs_features_path = osp.join(raw_graph_data, 'iswcs_features.csv')
+        iswcs_features_path = osp.join(raw_graph_data, 'node-feat', 'iswcs_features.csv')
         iswcs_features_df = pd.DataFrame(np.array(iswcs_features))
         iswcs_features_df.to_csv(iswcs_features_path, index=False, header=None)
 
@@ -90,6 +90,6 @@ class FastTextFeaturizer(Featurizer):
             features = self.ft.get_sentence_vector(title)
             client_features.append(features)
 
-        client_features_path = osp.join(raw_graph_data, 'clients_features.csv')
+        client_features_path = osp.join(raw_graph_data, 'node-feat', 'clients_features.csv')
         client_features_df = pd.DataFrame(np.array(client_features))
         client_features_df.to_csv(client_features_path, index=False, header=None)
