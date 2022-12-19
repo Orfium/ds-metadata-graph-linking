@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import os.path as osp
 import torch_geometric.transforms as T
+from sklearn.model_selection import train_test_split
 from torch_geometric.data import HeteroData
 
 from torch_geometric.loader import LinkNeighborLoader
@@ -12,7 +13,7 @@ from ds_metadata_graph_linking.featurizers.fasttext import FastTextFeaturizer
 
 from ds_metadata_graph_linking.utils.edges import Edges
 from ds_metadata_graph_linking.utils.graph import sample_graph, generate_graph_statistics, \
-    generate_indexes_for_relations
+    generate_indexes_for_relations, link_sample_graph
 
 
 def create_toy_dataset():
@@ -41,7 +42,7 @@ def create_dataset(dataset_path, split):
     return MetadataLinkingDataset(dataset_path, split)
 
 
-def create_dataloader(config, dataset, edge_label_index, neg_sampling_ratio, edge_label=None, shuffle=True):
+def create_dataloader(config, dataset, edge_label_index, neg_sampling_ratio=1, edge_label=None, shuffle=True):
     return LinkNeighborLoader(
         dataset,
         shuffle=shuffle,
@@ -70,20 +71,22 @@ def create_raw_graph_data_from_raw(sample_size: int, raw_data: str, raw_graph_da
     owns = pd.read_csv(osp.join(raw_data, 'owns.csv'))
     performed = pd.read_csv(osp.join(raw_data, 'performed.csv'))
     wrote = pd.read_csv(osp.join(raw_data, 'wrote.csv'))
+    neg_embedded = pd.read_csv(osp.join(raw_data, 'neg_embedded.csv'))
 
     print(f'Sampling graph with base composition number {sample_size}')
-    sample_graph(compositions=compositions, recordings=recordings, clients=clients, iswcs=iswcs, isrcs=isrcs,
-                 embedded=embedded, performed=performed, wrote=wrote, has_isrc=has_isrc, has_iswc=has_iswc, owns=owns,
-                 compositions_to_sample=sample_size, dataset_to_save=raw_graph_data)
+    link_sample_graph(compositions=compositions, recordings=recordings, clients=clients, iswcs=iswcs, isrcs=isrcs,
+                      embedded=embedded, neg_embedded=neg_embedded, performed=performed, wrote=wrote, has_isrc=has_isrc,
+                      has_iswc=has_iswc, owns=owns, embedded_to_sample=sample_size, dataset_to_save=raw_graph_data)
 
-    artists = pd.read_csv(osp.join(raw_graph_data, 'nodes/artists_sample.csv'))
-    recordings = pd.read_csv(osp.join(raw_graph_data, 'nodes/recordings_sample.csv'))
-    compositions = pd.read_csv(osp.join(raw_graph_data, 'nodes/compositions_sample.csv'))
-    clients = pd.read_csv(osp.join(raw_graph_data, 'nodes/client_sample.csv'))
-    iswcs = pd.read_csv(osp.join(raw_graph_data, 'nodes/iswcs_sample.csv'))
-    isrcs = pd.read_csv(osp.join(raw_graph_data, 'nodes/isrcs_sample.csv'))
+    artists = pd.read_csv(osp.join(raw_graph_data, 'node-feat/artist_sample.csv'))
+    recordings = pd.read_csv(osp.join(raw_graph_data, 'node-feat/recordings_sample.csv'))
+    compositions = pd.read_csv(osp.join(raw_graph_data, 'node-feat/compositions_sample.csv'))
+    clients = pd.read_csv(osp.join(raw_graph_data, 'node-feat/client_sample.csv'))
+    iswcs = pd.read_csv(osp.join(raw_graph_data, 'node-feat/iswcs_sample.csv'))
+    isrcs = pd.read_csv(osp.join(raw_graph_data, 'node-feat/isrcs_sample.csv'))
 
     embedded = pd.read_csv(osp.join(raw_graph_data, 'relations/embedded_sample.csv'))
+    neg_embedded = pd.read_csv(osp.join(raw_graph_data, 'relations/neg_embedded_sample.csv'))
     has_isrc = pd.read_csv(osp.join(raw_graph_data, 'relations/has_isrc_sample.csv'))
     has_iswc = pd.read_csv(osp.join(raw_graph_data, 'relations/has_iswc_sample.csv'))
     owns = pd.read_csv(osp.join(raw_graph_data, 'relations/owns_sample.csv'))
@@ -92,10 +95,12 @@ def create_raw_graph_data_from_raw(sample_size: int, raw_data: str, raw_graph_da
 
     print(f'Generating indexes for relations')
     generate_indexes_for_relations(compositions=compositions, recordings=recordings, clients=clients, iswcs=iswcs,
-                                   isrcs=isrcs, embedded=embedded, performed=performed, wrote=wrote, has_isrc=has_isrc,
+                                   isrcs=isrcs, embedded=embedded, neg_embedded=neg_embedded,
+                                   performed=performed, wrote=wrote, has_isrc=has_isrc,
                                    has_iswc=has_iswc, owns=owns, artists=artists, dataset_to_save=raw_graph_data)
 
     embedded = pd.read_csv(osp.join(raw_graph_data, 'relations/embedded_sample.csv'))
+    neg_embedded = pd.read_csv(osp.join(raw_graph_data, 'relations/neg_embedded_sample.csv'))
     has_isrc = pd.read_csv(osp.join(raw_graph_data, 'relations/has_isrc_sample.csv'))
     has_iswc = pd.read_csv(osp.join(raw_graph_data, 'relations/has_iswc_sample.csv'))
     owns = pd.read_csv(osp.join(raw_graph_data, 'relations/owns_sample.csv'))
@@ -105,8 +110,9 @@ def create_raw_graph_data_from_raw(sample_size: int, raw_data: str, raw_graph_da
     print()
     print('Graph Statistics')
     generate_graph_statistics(compositions=compositions, recordings=recordings, clients=clients, iswcs=iswcs,
-                              isrcs=isrcs, embedded=embedded, performed=performed, wrote=wrote, has_isrc=has_isrc,
-                              has_iswc=has_iswc, owns=owns, artists=artists)
+                              isrcs=isrcs, embedded=embedded, neg_embedded=neg_embedded,
+                              performed=performed, wrote=wrote, has_isrc=has_isrc, has_iswc=has_iswc, owns=owns,
+                              artists=artists)
 
     print('Generating Features for different nodes')
     featurizer = FastTextFeaturizer()
@@ -132,7 +138,52 @@ def create_hetero_dataset_from_raw_graph_data(raw_graph_data, processed_data):
     print(f'Hetero dataset was saved to {hetero_data_path}')
 
 
-def train_test_split_hetero_dataset(processed_data, num_val, num_test, neg_sampling_ratio,
+def negative_train_test_split(neg_edge_label_index, num_val, num_test):
+    x_train, x_test = train_test_split(neg_edge_label_index.t(),
+                                       test_size=num_val + num_test,
+                                       random_state=42)
+    x_test, x_val = train_test_split(x_test, test_size=num_test / (num_test + num_val))
+
+    train_neg_edge_label_index = x_train.t()
+    val_neg_edge_label_index = x_val.t()
+    test_neg_edge_label_index = x_test.t()
+
+    return train_neg_edge_label_index, val_neg_edge_label_index, test_neg_edge_label_index
+
+
+def split_and_inject_negatives(raw_graph_data, train_data, num_val, val_data, num_test, test_data):
+    neg_embedded = pd.read_csv(osp.join(raw_graph_data, 'relations', 'neg_embedded_sample.csv'))
+    neg_edge_label_index = torch.from_numpy(neg_embedded[['compositions_index', 'recordings_index']].values).t()
+
+    train_neg_edge_label_index, val_neg_edge_label_index, test_neg_edge_label_index = negative_train_test_split(
+        neg_edge_label_index=neg_edge_label_index,
+        num_val=num_val,
+        num_test=num_test
+    )
+
+    train_neg_edge_label = torch.zeros_like(train_neg_edge_label_index[0])
+    train_edge_label_index = torch.concat(dim=1, tensors=(train_data[Edges.edge_to_predict].edge_label_index,
+                                                          train_neg_edge_label_index))
+    train_edge_label = torch.concat((train_data[Edges.edge_to_predict].edge_label, train_neg_edge_label), dim=0)
+    train_data[Edges.edge_to_predict].edge_label = train_edge_label
+    train_data[Edges.edge_to_predict].edge_label_index = train_edge_label_index
+
+    val_neg_edge_label = torch.zeros_like(val_neg_edge_label_index[0])
+    val_edge_label_index = torch.concat(dim=1, tensors=(val_data[Edges.edge_to_predict].edge_label_index,
+                                                        val_neg_edge_label_index))
+    val_edge_label = torch.concat((val_data[Edges.edge_to_predict].edge_label, val_neg_edge_label), dim=0)
+    val_data[Edges.edge_to_predict].edge_label = val_edge_label
+    val_data[Edges.edge_to_predict].edge_label_index = val_edge_label_index
+
+    test_neg_edge_label = torch.zeros_like(test_neg_edge_label_index[0])
+    test_edge_label_index = torch.concat(dim=1, tensors=(test_data[Edges.edge_to_predict].edge_label_index,
+                                                         test_neg_edge_label_index))
+    test_edge_label = torch.concat((test_data[Edges.edge_to_predict].edge_label, test_neg_edge_label), dim=0)
+    test_data[Edges.edge_to_predict].edge_label = test_edge_label
+    test_data[Edges.edge_to_predict].edge_label_index = test_edge_label_index
+
+
+def train_test_split_hetero_dataset(raw_graph_data, processed_data, num_val, num_test, neg_sampling_ratio,
                                     disjoint_train_ratio, add_negative_train_samples):
     print(f'Loading hetero dataset...')
     data = torch.load(osp.join(processed_data, 'data.pt'))
@@ -145,6 +196,8 @@ def train_test_split_hetero_dataset(processed_data, num_val, num_test, neg_sampl
                                                         edge_types=Edges.edge_to_predict,
                                                         rev_edge_types=Edges.reverse_edge_to_predict,
                                                         add_negative_train_samples=add_negative_train_samples)(data)
+
+    split_and_inject_negatives(raw_graph_data, train_data, num_val, val_data, num_test, test_data)
 
     torch.save(train_data, osp.join(processed_data, 'train_data.pt'))
     torch.save(val_data, osp.join(processed_data, 'val_data.pt'))
