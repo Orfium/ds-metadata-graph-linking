@@ -1,5 +1,61 @@
-import pandas as pd
 import os
+import pandas as pd
+
+
+def link_sample_graph(compositions: pd.DataFrame, recordings: pd.DataFrame, clients: pd.DataFrame,
+                      iswcs: pd.DataFrame, isrcs: pd.DataFrame, embedded: pd.DataFrame, neg_embedded: pd.DataFrame,
+                      performed: pd.DataFrame, wrote: pd.DataFrame, has_isrc: pd.DataFrame,
+                      has_iswc: pd.DataFrame, owns: pd.DataFrame, embedded_to_sample: int, dataset_to_save: str):
+    embedded_sample = embedded.sample(embedded_to_sample).drop_duplicates()
+    neg_embedded_sample = neg_embedded.sample(embedded_to_sample).drop_duplicates()
+
+    # A -> B pos
+    # B -> C neg
+    # A => C pos
+
+    pos_neg_embedded_sample = pd.concat([  # FIXME: Might be better to sample similar nodes from both edges
+        embedded_sample[['assetID', 'share_asset_id']],
+        neg_embedded_sample[['assetID', 'share_asset_id']]
+    ], keys=['assetID', 'share_asset_id']).drop_duplicates().reset_index(drop=True)
+
+    # sample tbe nodes based on the concat pos and neg edges
+    compositions_sample = compositions.merge(pos_neg_embedded_sample,
+                                             on='share_asset_id',
+                                             how='inner')[compositions.columns].drop_duplicates()
+
+    has_iswc_sample = has_iswc.merge(compositions_sample,
+                                     on='share_asset_id',
+                                     how='inner')[has_iswc.columns].drop_duplicates()
+    owns_sample = owns.merge(compositions_sample, on='share_asset_id', how='inner')[owns.columns].drop_duplicates()
+    client_sample = clients.merge(owns_sample, on='client_name', how='inner')[clients.columns].drop_duplicates()
+    wrote_sample = wrote.merge(compositions_sample, on='share_asset_id', how='inner')[wrote.columns].drop_duplicates()
+
+    recordings_sample = recordings.merge(pos_neg_embedded_sample,
+                                         on='assetID',
+                                         how='inner')[recordings.columns].drop_duplicates()
+    has_isrc_sample = has_isrc.merge(recordings_sample, on='assetID', how='inner')[has_isrc.columns].drop_duplicates()
+    performed_sample = performed.merge(recordings_sample,
+                                       on='assetID',
+                                       how='inner')[performed.columns].drop_duplicates()
+    artists_sample = pd.concat([performed_sample[['name']],
+                                wrote_sample[['name']]]).drop_duplicates().reset_index(drop=True)
+
+    isrcs_sample = isrcs.merge(has_isrc_sample, on='isrc', how='inner')[isrcs.columns].drop_duplicates()
+    iswcs_sample = iswcs.merge(has_iswc_sample, on='iswc', how='inner')[iswcs.columns].drop_duplicates()
+
+    compositions_sample.to_csv(os.path.join(dataset_to_save, 'node-feat/compositions_sample.csv'), index=False)
+    has_iswc_sample.to_csv(os.path.join(dataset_to_save, 'relations/has_iswc_sample.csv'), index=False)
+    iswcs_sample.to_csv(os.path.join(dataset_to_save, 'node-feat/iswcs_sample.csv'), index=False)
+    embedded_sample.to_csv(os.path.join(dataset_to_save, 'relations/embedded_sample.csv'), index=False)
+    neg_embedded_sample.to_csv(os.path.join(dataset_to_save, 'relations/neg_embedded_sample.csv'), index=False)
+    recordings_sample.to_csv(os.path.join(dataset_to_save, 'node-feat/recordings_sample.csv'), index=False)
+    has_isrc_sample.to_csv(os.path.join(dataset_to_save, 'relations/has_isrc_sample.csv'), index=False)
+    isrcs_sample.to_csv(os.path.join(dataset_to_save, 'node-feat/isrcs_sample.csv'), index=False)
+    owns_sample.to_csv(os.path.join(dataset_to_save, 'relations/owns_sample.csv'), index=False)
+    client_sample.to_csv(os.path.join(dataset_to_save, 'node-feat/client_sample.csv'), index=False)
+    performed_sample.to_csv(os.path.join(dataset_to_save, 'relations/performed_sample.csv'), index=False)
+    wrote_sample.to_csv(os.path.join(dataset_to_save, 'relations/wrote_sample.csv'), index=False)
+    artists_sample.to_csv(os.path.join(dataset_to_save, 'node-feat/artist_sample.csv'), index=False)
 
 
 def sample_graph(compositions: pd.DataFrame, recordings: pd.DataFrame, clients: pd.DataFrame,
@@ -41,17 +97,17 @@ def sample_graph(compositions: pd.DataFrame, recordings: pd.DataFrame, clients: 
     has_isrc_sample.to_csv(os.path.join(dataset_to_save, 'relations/has_isrc_sample.csv'), index=False)
     isrcs_sample.to_csv(os.path.join(dataset_to_save, 'nodes/isrcs_sample.csv'), index=False)
     owns_sample.to_csv(os.path.join(dataset_to_save, 'relations/owns_sample.csv'), index=False)
-    client_sample.to_csv(os.path.join(dataset_to_save, 'nodes/client_sample.csv'), index=False)
+    client_sample.to_csv(os.path.join(dataset_to_save, 'nodes/client.csv'), index=False)
     performed_sample.to_csv(os.path.join(dataset_to_save, 'relations/performed_sample.csv'), index=False)
     wrote_sample.to_csv(os.path.join(dataset_to_save, 'relations/wrote_sample.csv'), index=False)
-    artists_sample.to_csv(os.path.join(dataset_to_save, 'nodes/artists_sample.csv'), index=False)
+    artists_sample.to_csv(os.path.join(dataset_to_save, 'nodes/artist.csv'), index=False)
 
 
 def generate_graph_statistics(compositions: pd.DataFrame, recordings: pd.DataFrame, clients: pd.DataFrame,
                               iswcs: pd.DataFrame, isrcs: pd.DataFrame, artists: pd.DataFrame,
-                              embedded: pd.DataFrame, performed: pd.DataFrame, wrote: pd.DataFrame,
-                              has_isrc: pd.DataFrame, has_iswc: pd.DataFrame, owns: pd.DataFrame):
-
+                              embedded: pd.DataFrame, neg_embedded: pd.DataFrame,
+                              performed: pd.DataFrame, wrote: pd.DataFrame, has_isrc: pd.DataFrame,
+                              has_iswc: pd.DataFrame, owns: pd.DataFrame):
     recordings_nodes = recordings.shape[0]
     compositions_nodes = compositions.shape[0]
     clients_nodes = clients.shape[0]
@@ -60,6 +116,7 @@ def generate_graph_statistics(compositions: pd.DataFrame, recordings: pd.DataFra
     artists_nodes = artists.shape[0]
 
     embedded_edges = embedded.shape[0]
+    neg_embedded_edges = neg_embedded.shape[0]
     has_isrc_edges = has_isrc.shape[0]
     has_iswc_edges = has_iswc.shape[0]
     owns_edges = owns.shape[0]
@@ -84,6 +141,7 @@ def generate_graph_statistics(compositions: pd.DataFrame, recordings: pd.DataFra
     print(f'ISRC nodes: {isrcs_nodes}')
     print()
     print(f'embedded edges: {embedded_edges}')
+    print(f'neg_embedded edges: {neg_embedded_edges}')
     print(f'has_isrc edges: {has_isrc_edges}')
     print(f'has_iswc edges: {has_iswc_edges}')
     print(f'owns edges: {owns_edges}')
@@ -93,9 +151,9 @@ def generate_graph_statistics(compositions: pd.DataFrame, recordings: pd.DataFra
 
 def generate_indexes_for_relations(compositions: pd.DataFrame, recordings: pd.DataFrame, clients: pd.DataFrame,
                                    iswcs: pd.DataFrame, isrcs: pd.DataFrame, artists: pd.DataFrame,
-                                   embedded: pd.DataFrame, performed: pd.DataFrame, wrote: pd.DataFrame,
-                                   has_isrc: pd.DataFrame, has_iswc: pd.DataFrame, owns: pd.DataFrame,
-                                   dataset_to_save: str):
+                                   embedded: pd.DataFrame, neg_embedded: pd.DataFrame,
+                                   performed: pd.DataFrame, wrote: pd.DataFrame, has_isrc: pd.DataFrame,
+                                   has_iswc: pd.DataFrame, owns: pd.DataFrame, dataset_to_save: str):
     # get node indexes
     recordings['recordings_index'] = recordings.index
     artists['artists_index'] = artists.index
@@ -109,6 +167,11 @@ def generate_indexes_for_relations(compositions: pd.DataFrame, recordings: pd.Da
     embedded = embedded.merge(recordings[['assetID', 'recordings_index']], on='assetID')
     embedded = embedded.drop(columns=['share_asset_id', 'assetID'])
     embedded.to_csv(os.path.join(dataset_to_save, 'relations/embedded_sample.csv'), index=False)
+
+    neg_embedded = neg_embedded.merge(compositions[['share_asset_id', 'compositions_index']], on='share_asset_id')
+    neg_embedded = neg_embedded.merge(recordings[['assetID', 'recordings_index']], on='assetID')
+    neg_embedded = neg_embedded.drop(columns=['share_asset_id', 'assetID'])
+    neg_embedded.to_csv(os.path.join(dataset_to_save, 'relations/neg_embedded_sample.csv'), index=False)
 
     # has_isrc relation
     has_isrc = has_isrc.merge(recordings[['assetID', 'recordings_index']], on='assetID')

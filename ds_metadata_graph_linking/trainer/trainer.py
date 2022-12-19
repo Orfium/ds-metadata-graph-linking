@@ -56,6 +56,7 @@ class Trainer:
 
         batch = batch.to(self.config.device)
         edge_to_predict_storage = batch[Edges.edge_to_predict]
+
         edge_label = edge_to_predict_storage.edge_label
         edge_label_index = edge_to_predict_storage.edge_label_index
 
