@@ -2,18 +2,36 @@ import os
 import pandas as pd
 
 
+def negative_sampling(neg_embedded, embedded_sample, embedded_to_sample):
+    columns = ['assetID', 'share_asset_id']
+    neg_embedded = neg_embedded.drop_duplicates(subset=columns)
+    neg_embedded_sample = embedded_sample.merge(neg_embedded, on='share_asset_id', how='inner')
+    neg_embedded_sample = neg_embedded_sample[['share_asset_id', 'assetID_y', 'neg_embedded_sample_index']]
+    neg_embedded_sample = neg_embedded_sample.drop_duplicates()
+    neg_embedded_sample = neg_embedded_sample.rename(columns={"assetID_y": "assetID"})  # rename after merging
+
+    # in most cases this sample is not enough, so we need to sample more from the remaining initial pool
+    if neg_embedded_sample.shape[0] < embedded_to_sample:
+        embedded_to_sample_left = embedded_to_sample - neg_embedded_sample.shape[0]
+        sample_criterion = neg_embedded.index.isin(neg_embedded_sample['neg_embedded_sample_index'].values)
+        neg_embedded_to_sample_from = neg_embedded[~sample_criterion]
+        neg_embedded_sample_extra = neg_embedded_to_sample_from.sample(embedded_to_sample_left)
+        neg_embedded_sample = pd.concat([neg_embedded_sample[columns], neg_embedded_sample_extra[columns]])
+        neg_embedded_sample = neg_embedded_sample.reset_index(drop=True)
+
+    return neg_embedded_sample
+
+
 def link_sample_graph(compositions: pd.DataFrame, recordings: pd.DataFrame, clients: pd.DataFrame,
                       iswcs: pd.DataFrame, isrcs: pd.DataFrame, embedded: pd.DataFrame, neg_embedded: pd.DataFrame,
                       performed: pd.DataFrame, wrote: pd.DataFrame, has_isrc: pd.DataFrame,
                       has_iswc: pd.DataFrame, owns: pd.DataFrame, embedded_to_sample: int, dataset_to_save: str):
+    neg_embedded['neg_embedded_sample_index'] = neg_embedded.index  # index the negatives
+
     embedded_sample = embedded.sample(embedded_to_sample).drop_duplicates()
-    neg_embedded_sample = neg_embedded.sample(embedded_to_sample).drop_duplicates()
+    neg_embedded_sample = negative_sampling(neg_embedded, embedded_sample, embedded_to_sample)
 
-    # A -> B pos
-    # B -> C neg
-    # A => C pos
-
-    pos_neg_embedded_sample = pd.concat([  # FIXME: Might be better to sample similar nodes from both edges
+    pos_neg_embedded_sample = pd.concat([
         embedded_sample[['assetID', 'share_asset_id']],
         neg_embedded_sample[['assetID', 'share_asset_id']]
     ], keys=['assetID', 'share_asset_id']).drop_duplicates().reset_index(drop=True)
@@ -33,6 +51,7 @@ def link_sample_graph(compositions: pd.DataFrame, recordings: pd.DataFrame, clie
     recordings_sample = recordings.merge(pos_neg_embedded_sample,
                                          on='assetID',
                                          how='inner')[recordings.columns].drop_duplicates()
+
     has_isrc_sample = has_isrc.merge(recordings_sample, on='assetID', how='inner')[has_isrc.columns].drop_duplicates()
     performed_sample = performed.merge(recordings_sample,
                                        on='assetID',

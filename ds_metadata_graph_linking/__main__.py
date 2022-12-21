@@ -64,11 +64,6 @@ def val_entrypoint(dataset_path, checkpoints_path):
     print(dict(zip(unique, counts)))
 
 
-import torch
-import numpy as np
-import pandas as pd
-
-
 @cli.command(name='train')
 @click.option('--config', type=click.STRING, required=True)
 @click.option('--dataset_path', type=click.STRING, required=True)
