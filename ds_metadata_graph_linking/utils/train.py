@@ -27,4 +27,4 @@ def print_stats(train_dataset, train_dataloader, val_dataset, val_dataloader):
     print('val_batch', val_batch)
 
     print('train_batch_stats', np.unique(train_batch[Edges.edge_to_predict].edge_label.numpy(), return_counts=True))
-    print('val_batch_stats', np.unique(val_batch[Edges.edge_to_predict].numpy(), return_counts=True))
+    print('val_batch_stats', np.unique(val_batch[Edges.edge_to_predict].edge_label.numpy(), return_counts=True))
