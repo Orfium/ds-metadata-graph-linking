@@ -7,6 +7,7 @@ class Optimizer:
         self.epsilon = config.epsilon
         self.betas = (config.beta1, config.beta2)
         self.learning_rate = config.learning_rate
+        self.weight_decay = config.weight_decay
         self.total_steps = len(train_dataloader) * self.config.epochs
         self.params, self.optimizer = self._build_optimizer(model_manager)
 
@@ -30,5 +31,9 @@ class Optimizer:
 
     def _build_optimizer(self, model_manager):
         params = model_manager.parameters()
-        optimizer = torch.optim.Adam(params, lr=self.learning_rate, betas=self.betas, eps=self.epsilon)
+        optimizer = torch.optim.Adam(params,
+                                     lr=self.learning_rate,
+                                     betas=self.betas,
+                                     eps=self.epsilon,
+                                     weight_decay=self.weight_decay)
         return params, optimizer

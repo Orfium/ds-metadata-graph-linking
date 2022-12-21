@@ -30,6 +30,7 @@ class TrainConfig:
         self.beta2 = kwargs['optimizer'].pop('beta2', 0.999)
         self.epsilon = float(kwargs['optimizer'].pop('epsilon', 1e-8))
         self.learning_rate = float(kwargs['optimizer'].pop('lr', 0.001))
+        self.weight_decay = float(kwargs['optimizer'].pop('weight_decay', 0))
 
         self.device = decide_device(kwargs['train'].pop('device', Devices.GPU))
 
