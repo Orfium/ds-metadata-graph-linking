@@ -3,6 +3,8 @@ import random
 
 import numpy as np
 
+from ds_metadata_graph_linking.utils.edges import Edges
+
 
 def set_seed(seed):
     random.seed(seed)
@@ -24,5 +26,5 @@ def print_stats(train_dataset, train_dataloader, val_dataset, val_dataloader):
     print('train_batch', train_batch)
     print('val_batch', val_batch)
 
-    print('train_batch_stats', np.unique(train_batch.edge_label.numpy(), return_counts=True))
-    print('val_batch_stats', np.unique(val_batch.edge_label.numpy(), return_counts=True))
+    print('train_batch_stats', np.unique(train_batch[Edges.edge_to_predict].edge_label.numpy(), return_counts=True))
+    print('val_batch_stats', np.unique(val_batch[Edges.edge_to_predict].numpy(), return_counts=True))
