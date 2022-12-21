@@ -5,6 +5,11 @@ import pandas as pd
 def negative_sampling(neg_embedded, embedded_sample, embedded_to_sample):
     columns = ['assetID', 'share_asset_id']
     neg_embedded = neg_embedded.drop_duplicates(subset=columns)
+    
+    if embedded_to_sample > neg_embedded.shape[0]:
+        print(f'Can not sample {embedded_to_sample} negatives, adjusting it to {neg_embedded.shape[0]}')
+        embedded_to_sample = neg_embedded.shape[0]
+
     neg_embedded_sample = embedded_sample.merge(neg_embedded, on='share_asset_id', how='inner')
     neg_embedded_sample = neg_embedded_sample[['share_asset_id', 'assetID_y', 'neg_embedded_sample_index']]
     neg_embedded_sample = neg_embedded_sample.drop_duplicates()

@@ -25,7 +25,7 @@ class FastTextFeaturizer(Featurizer):
     def generate_features_recordings(self, recordings: pd.DataFrame, raw_graph_data: str):
         recording_title_features = []
 
-        for index, row in tqdm(recordings.iterrows(), position=0, leave=True):
+        for index, row in tqdm(recordings.iterrows(), position=0, leave=True, total=recordings.shape[0]):
             title = str(row['recording_title'])
             features = self.ft.get_sentence_vector(title)
             recording_title_features.append(features)
@@ -37,7 +37,7 @@ class FastTextFeaturizer(Featurizer):
     def generate_features_compositions(self, compositions: pd.DataFrame, raw_graph_data: str):
         composition_title_features = []
 
-        for index, row in tqdm(compositions.iterrows(), position=0, leave=True):
+        for index, row in tqdm(compositions.iterrows(), position=0, leave=True, total=compositions.shape[0]):
             title = str(row['composition_title'])
             features = self.ft.get_sentence_vector(title)
             composition_title_features.append(features)
@@ -49,7 +49,7 @@ class FastTextFeaturizer(Featurizer):
     def generate_features_artists(self, artists: pd.DataFrame, raw_graph_data: str):
         artist_features = []
 
-        for index, row in tqdm(artists.iterrows(), position=0, leave=True):
+        for index, row in tqdm(artists.iterrows(), position=0, leave=True, total=artists.shape[0]):
             title = str(row['name'])
             features = self.ft.get_sentence_vector(title)
             artist_features.append(features)
@@ -61,7 +61,7 @@ class FastTextFeaturizer(Featurizer):
     def generate_features_isrcs(self, isrcs: pd.DataFrame, raw_graph_data: str):
         isrcs_features = []
 
-        for index, row in tqdm(isrcs.iterrows(), position=0, leave=True):
+        for index, row in tqdm(isrcs.iterrows(), position=0, leave=True, total=isrcs.shape[0]):
             title = str(row['isrc'])
             features = self.ft.get_sentence_vector(title)
             isrcs_features.append(features)
@@ -73,7 +73,7 @@ class FastTextFeaturizer(Featurizer):
     def generate_features_iswcs(self, iswcs: pd.DataFrame, raw_graph_data: str):
         iswcs_features = []
 
-        for index, row in tqdm(iswcs.iterrows(), position=0, leave=True):
+        for index, row in tqdm(iswcs.iterrows(), position=0, leave=True, total=iswcs.shape[0]):
             title = str(row['iswc'])
             features = self.ft.get_sentence_vector(title)
             iswcs_features.append(features)
@@ -85,7 +85,7 @@ class FastTextFeaturizer(Featurizer):
     def generate_features_clients(self, clients: pd.DataFrame, raw_graph_data: str):
         client_features = []
 
-        for index, row in tqdm(clients.iterrows(), position=0, leave=True):
+        for index, row in tqdm(clients.iterrows(), position=0, leave=True, total=clients.shape[0]):
             title = str(row['client_name'])
             features = self.ft.get_sentence_vector(title)
             client_features.append(features)
