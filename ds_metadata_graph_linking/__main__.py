@@ -84,11 +84,13 @@ def val_entrypoint(dataset_path, neg_embedded_path, checkpoints_path):
 @click.option('--dataset_path', type=click.STRING, required=True)
 @click.option('--checkpoints_path', type=click.STRING, required=True)
 def train_entrypoint(config, dataset_path, checkpoints_path):
-    wandb.init(project="link_prediction", entity="stavros-giorgis", name="r2c_test")
-
     config = load_config(config, dataset_path, checkpoints_path)
     set_seed(config.seed)
     print(config)
+
+    wandb.init(project="link_prediction",
+               entity="stavros-giorgis",
+               config=config)
 
     train_dataset = create_dataset(dataset_path, split='train').data
     train_edge_label_index = (Edges.edge_to_predict, train_dataset[Edges.edge_to_predict].edge_label_index)
