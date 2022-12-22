@@ -3,6 +3,7 @@ import pandas as pd
 import os.path as osp
 import fasttext.util
 import fasttext as fastt
+from numpy import savez_compressed
 
 from tqdm import tqdm
 
@@ -30,9 +31,8 @@ class FastTextFeaturizer(Featurizer):
             features = self.ft.get_sentence_vector(title)
             recording_title_features.append(features)
 
-        recording_title_features_path = osp.join(raw_graph_data, 'node-feat', 'recording_features.csv')
-        recording_title_features_df = pd.DataFrame(np.array(recording_title_features))
-        recording_title_features_df.to_csv(recording_title_features_path, index=False, header=None)
+        recording_title_features_path = osp.join(raw_graph_data, 'node-feat', 'recording_features.npz')
+        savez_compressed(recording_title_features_path, np.array(recording_title_features))
 
     def generate_features_compositions(self, compositions: pd.DataFrame, raw_graph_data: str):
         composition_title_features = []
@@ -42,9 +42,8 @@ class FastTextFeaturizer(Featurizer):
             features = self.ft.get_sentence_vector(title)
             composition_title_features.append(features)
 
-        composition_title_features_path = osp.join(raw_graph_data, 'node-feat', 'composition_features.csv')
-        composition_title_features_df = pd.DataFrame(np.array(composition_title_features))
-        composition_title_features_df.to_csv(composition_title_features_path, index=False, header=None)
+        composition_title_features_path = osp.join(raw_graph_data, 'node-feat', 'composition_features.npz')
+        savez_compressed(composition_title_features_path, np.array(composition_title_features))
 
     def generate_features_artists(self, artists: pd.DataFrame, raw_graph_data: str):
         artist_features = []
@@ -54,9 +53,8 @@ class FastTextFeaturizer(Featurizer):
             features = self.ft.get_sentence_vector(title)
             artist_features.append(features)
 
-        artist_features_path = osp.join(raw_graph_data, 'node-feat', 'artist_features.csv')
-        artist_features_df = pd.DataFrame(np.array(artist_features))
-        artist_features_df.to_csv(artist_features_path, index=False, header=None)
+        artist_features_path = osp.join(raw_graph_data, 'node-feat', 'artist_features.npz')
+        savez_compressed(artist_features_path, np.array(artist_features))
 
     def generate_features_isrcs(self, isrcs: pd.DataFrame, raw_graph_data: str):
         isrcs_features = []
@@ -66,9 +64,8 @@ class FastTextFeaturizer(Featurizer):
             features = self.ft.get_sentence_vector(title)
             isrcs_features.append(features)
 
-        isrcs_features_path = osp.join(raw_graph_data, 'node-feat', 'isrcs_features.csv')
-        isrcs_features_df = pd.DataFrame(np.array(isrcs_features))
-        isrcs_features_df.to_csv(isrcs_features_path, index=False, header=None)
+        isrcs_features_path = osp.join(raw_graph_data, 'node-feat', 'isrcs_features.npz')
+        savez_compressed(isrcs_features_path, np.array(isrcs_features))
 
     def generate_features_iswcs(self, iswcs: pd.DataFrame, raw_graph_data: str):
         iswcs_features = []
@@ -78,9 +75,8 @@ class FastTextFeaturizer(Featurizer):
             features = self.ft.get_sentence_vector(title)
             iswcs_features.append(features)
 
-        iswcs_features_path = osp.join(raw_graph_data, 'node-feat', 'iswcs_features.csv')
-        iswcs_features_df = pd.DataFrame(np.array(iswcs_features))
-        iswcs_features_df.to_csv(iswcs_features_path, index=False, header=None)
+        iswcs_features_path = osp.join(raw_graph_data, 'node-feat', 'iswcs_features.npz')
+        savez_compressed(iswcs_features_path, np.array(iswcs_features))
 
     def generate_features_clients(self, clients: pd.DataFrame, raw_graph_data: str):
         client_features = []
@@ -90,6 +86,5 @@ class FastTextFeaturizer(Featurizer):
             features = self.ft.get_sentence_vector(title)
             client_features.append(features)
 
-        client_features_path = osp.join(raw_graph_data, 'node-feat', 'clients_features.csv')
-        client_features_df = pd.DataFrame(np.array(client_features))
-        client_features_df.to_csv(client_features_path, index=False, header=None)
+        client_features_path = osp.join(raw_graph_data, 'node-feat', 'clients_features.npz')
+        savez_compressed(client_features_path, np.array(client_features))

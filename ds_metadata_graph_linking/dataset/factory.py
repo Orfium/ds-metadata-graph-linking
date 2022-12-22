@@ -207,34 +207,34 @@ def train_test_split_hetero_dataset(raw_graph_data, processed_data, num_val, num
 
 def process_nodes(data, raw_graph_data):
     print(f'Processing recording nodes...')
-    recordings_path = osp.join(raw_graph_data, 'node-feat', 'recording_features.csv')
-    recordings = pd.read_csv(recordings_path, header=None, dtype=np.float32)
-    data['recording'].x = torch.from_numpy(recordings.values)
+    recordings_path = osp.join(raw_graph_data, 'node-feat', 'recording_features.npz')
+    recordings = np.load(recordings_path)['arr_0']
+    data['recording'].x = torch.from_numpy(recordings)
 
     print(f'Processing composition nodes...')
-    compositions_path = osp.join(raw_graph_data, 'node-feat', 'composition_features.csv')
-    compositions = pd.read_csv(compositions_path, header=None, dtype=np.float32)
-    data['composition'].x = torch.from_numpy(compositions.values)
+    compositions_path = osp.join(raw_graph_data, 'node-feat', 'composition_features.npz')
+    compositions = np.load(compositions_path)['arr_0']
+    data['composition'].x = torch.from_numpy(compositions)
 
     print(f'Processing artist nodes...')
-    artists_path = osp.join(raw_graph_data, 'node-feat', 'artist_features.csv')
-    artists = pd.read_csv(artists_path, header=None, dtype=np.float32)
-    data['artist'].x = torch.from_numpy(artists.values)
+    artists_path = osp.join(raw_graph_data, 'node-feat', 'artist_features.npz')
+    artists = np.load(artists_path)['arr_0']
+    data['artist'].x = torch.from_numpy(artists)
 
     print(f'Processing isrc nodes...')
-    isrcs_path = osp.join(raw_graph_data, 'node-feat', 'isrcs_features.csv')
-    isrcs = pd.read_csv(isrcs_path, header=None, dtype=np.float32)
-    data['isrc'].x = torch.from_numpy(isrcs.values)
+    isrcs_path = osp.join(raw_graph_data, 'node-feat', 'isrcs_features.npz')
+    isrcs = np.load(isrcs_path)['arr_0']
+    data['isrc'].x = torch.from_numpy(isrcs)
 
     print(f'Processing iswc nodes...')
-    iswcs_path = osp.join(raw_graph_data, 'node-feat', 'iswcs_features.csv')
-    iswcs = pd.read_csv(iswcs_path, header=None, dtype=np.float32)
-    data['iswc'].x = torch.from_numpy(iswcs.values)
+    iswcs_path = osp.join(raw_graph_data, 'node-feat', 'iswcs_features.npz')
+    iswcs = np.load(iswcs_path)['arr_0']
+    data['iswc'].x = torch.from_numpy(iswcs)
 
     print(f'Processing client nodes...')
-    clients_path = osp.join(raw_graph_data, 'node-feat', 'clients_features.csv')
-    clients = pd.read_csv(clients_path, header=None, dtype=np.float32)
-    data['client'].x = torch.from_numpy(clients.values)
+    clients_path = osp.join(raw_graph_data, 'node-feat', 'clients_features.npz')
+    clients = np.load(clients_path)['arr_0']
+    data['client'].x = torch.from_numpy(clients)
 
 
 def process_relations(data, raw_graph_data, relations_dir='relations'):
