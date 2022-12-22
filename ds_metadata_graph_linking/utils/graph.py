@@ -113,18 +113,18 @@ def sample_graph(compositions: pd.DataFrame, recordings: pd.DataFrame, clients: 
     artists_sample = to_find_artists
 
     # save to csv
-    compositions_sample.to_csv(os.path.join(dataset_to_save, 'nodes/compositions_sample.csv'), index=False)
+    compositions_sample.to_csv(os.path.join(dataset_to_save, 'node-feat/compositions_sample.csv'), index=False)
     has_iswc_sample.to_csv(os.path.join(dataset_to_save, 'relations/has_iswc_sample.csv'), index=False)
-    iswcs_sample.to_csv(os.path.join(dataset_to_save, 'nodes/iswcs_sample.csv'), index=False)
+    iswcs_sample.to_csv(os.path.join(dataset_to_save, 'node-feat/iswcs_sample.csv'), index=False)
     embedded_sample.to_csv(os.path.join(dataset_to_save, 'relations/embedded_sample.csv'), index=False)
-    recordings_sample.to_csv(os.path.join(dataset_to_save, 'nodes/recordings_sample.csv'), index=False)
+    recordings_sample.to_csv(os.path.join(dataset_to_save, 'node-feat/recordings_sample.csv'), index=False)
     has_isrc_sample.to_csv(os.path.join(dataset_to_save, 'relations/has_isrc_sample.csv'), index=False)
-    isrcs_sample.to_csv(os.path.join(dataset_to_save, 'nodes/isrcs_sample.csv'), index=False)
+    isrcs_sample.to_csv(os.path.join(dataset_to_save, 'node-feat/isrcs_sample.csv'), index=False)
     owns_sample.to_csv(os.path.join(dataset_to_save, 'relations/owns_sample.csv'), index=False)
-    client_sample.to_csv(os.path.join(dataset_to_save, 'nodes/client.csv'), index=False)
+    client_sample.to_csv(os.path.join(dataset_to_save, 'node-feat/client.csv'), index=False)
     performed_sample.to_csv(os.path.join(dataset_to_save, 'relations/performed_sample.csv'), index=False)
     wrote_sample.to_csv(os.path.join(dataset_to_save, 'relations/wrote_sample.csv'), index=False)
-    artists_sample.to_csv(os.path.join(dataset_to_save, 'nodes/artist.csv'), index=False)
+    artists_sample.to_csv(os.path.join(dataset_to_save, 'node-feat/artist.csv'), index=False)
 
 
 def generate_graph_statistics(compositions: pd.DataFrame, recordings: pd.DataFrame, clients: pd.DataFrame,
