@@ -5,7 +5,7 @@ import pandas as pd
 def negative_sampling(neg_embedded, embedded_sample, embedded_to_sample):
     columns = ['assetID', 'share_asset_id']
     neg_embedded = neg_embedded.drop_duplicates(subset=columns)
-    
+
     if embedded_to_sample > neg_embedded.shape[0]:
         print(f'Can not sample {embedded_to_sample} negatives, adjusting it to {neg_embedded.shape[0]}')
         embedded_to_sample = neg_embedded.shape[0]

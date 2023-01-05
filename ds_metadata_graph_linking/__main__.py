@@ -1,5 +1,7 @@
 import json
 import os
+import os.path as osp
+
 from types import SimpleNamespace
 
 import click
@@ -25,6 +27,64 @@ def cli():
     pass
 
 
+import fasttext as fastt
+
+ft = fastt.load_model(
+    '/Users/stavros.giorgis/Desktop/workspace/ds-metadata-graph-linking/ds_metadata_graph_linking/featurizers/cc.en.300.bin')
+
+raw_data = '/Users/stavros.giorgis/Desktop/workspace/ds-metadata-graph-linking/data/R2C/raw/test'
+recordings = np.load(osp.join(raw_data, 'recordings.npz'), allow_pickle=True)['arr_0']
+compositions = np.load(osp.join(raw_data, 'compositions.npz'), allow_pickle=True)['arr_0']
+artists = np.load(osp.join(raw_data, 'artists.npz'), allow_pickle=True)['arr_0']
+clients = np.load(osp.join(raw_data, 'clients.npz'), allow_pickle=True)['arr_0']
+isrcs = np.load(osp.join(raw_data, 'isrcs.npz'), allow_pickle=True)['arr_0']
+iswcs = np.load(osp.join(raw_data, 'iswcs.npz'), allow_pickle=True)['arr_0']
+
+
+def generate_batch_embeddings(batch):
+    recording_x = batch.x_dict['recording'].numpy()
+    batch_recordings = recordings[recording_x]
+    recording_title_features = []
+    for batch_recording in batch_recordings:
+        recording_title_features.append(ft.get_sentence_vector(batch_recording))
+    batch['recording'].x = torch.tensor(np.array(recording_title_features))
+
+    composition_x = batch.x_dict['composition'].numpy()
+    batch_compositions = compositions[composition_x]
+    composition_title_features = []
+    for batch_composition in batch_compositions:
+        composition_title_features.append(ft.get_sentence_vector(batch_composition))
+    batch['composition'].x = torch.tensor(np.array(composition_title_features))
+
+    artist_x = batch.x_dict['artist'].numpy()
+    batch_artists = artists[artist_x]
+    artist_title_features = []
+    for batch_artist in batch_artists:
+        artist_title_features.append(ft.get_sentence_vector(batch_artist))
+    batch['artist'].x = torch.tensor(np.array(artist_title_features))
+
+    client_x = batch.x_dict['client'].numpy()
+    batch_clients = clients[client_x]
+    client_title_features = []
+    for batch_client in batch_clients:
+        client_title_features.append(ft.get_sentence_vector(batch_client))
+    batch['client'].x = torch.tensor(np.array(client_title_features))
+
+    isrc_x = batch.x_dict['isrc'].numpy()
+    batch_isrcs = isrcs[isrc_x]
+    isrc_features = []
+    for batch_isrc in batch_isrcs:
+        isrc_features.append(ft.get_sentence_vector(batch_isrc))
+    batch['isrc'].x = torch.tensor(np.array(isrc_features))
+
+    iswc_x = batch.x_dict['iswc'].numpy()
+    batch_iswcs = iswcs[iswc_x]
+    iswc_features = []
+    for batch_iswc in batch_iswcs:
+        iswc_features.append(ft.get_sentence_vector(batch_iswc))
+    batch['iswc'].x = torch.tensor(np.array(iswc_features))
+
+
 @cli.command(name='eval')
 @click.option('--dataset_path', type=click.STRING, required=True)
 @click.option('--neg_embedded_path', type=click.STRING, required=True)
@@ -44,6 +104,7 @@ def val_entrypoint(dataset_path, neg_embedded_path, checkpoints_path):
 
     dataset[Edges.edge_to_predict].edge_label_index = torch.from_numpy(neg_embedded.values).t().contiguous()
     dataset[Edges.edge_to_predict].edge_label = torch.zeros_like(dataset[Edges.edge_to_predict].edge_label_index)
+
     edge_label_index = (Edges.edge_to_predict, dataset[Edges.edge_to_predict].edge_label_index)
     dataloader = create_dataloader(config=config,
                                    dataset=dataset,
@@ -58,6 +119,8 @@ def val_entrypoint(dataset_path, neg_embedded_path, checkpoints_path):
     fpr_scores = []
     progress_bar = tqdm(enumerate(dataloader), total=len(dataloader))
     for _, batch in progress_bar:
+        generate_batch_embeddings(batch)
+
         edge_to_predict_storage = batch[Edges.edge_to_predict]
         edge_label = edge_to_predict_storage.edge_label
         edge_label_index = edge_to_predict_storage.edge_label_index
@@ -88,11 +151,14 @@ def train_entrypoint(config, dataset_path, checkpoints_path):
     set_seed(config.seed)
     print(config)
 
-    wandb.init(project="link_prediction",
-               entity="stavros-giorgis",
-               config=config)
+    # wandb.init(project="link_prediction",
+    #            entity="stavros-giorgis",
+    #            config=config)
 
     train_dataset = create_dataset(dataset_path, split='train').data
+    for index in range(train_dataset.x_dict['recording'].shape[0]):
+        train_dataset.x_dict['recording'][index][1] = index
+
     train_edge_label_index = (Edges.edge_to_predict, train_dataset[Edges.edge_to_predict].edge_label_index)
     train_dataloader = create_dataloader(config=config,
                                          dataset=train_dataset,

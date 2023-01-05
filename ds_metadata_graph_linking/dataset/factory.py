@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import os.path as osp
 import torch_geometric.transforms as T
+from numpy import savez_compressed
 from sklearn.model_selection import train_test_split
 from torch_geometric.data import HeteroData
 
@@ -55,13 +56,96 @@ def create_dataloader(config, dataset, edge_label_index, neg_sampling_ratio=1, e
     )
 
 
+def test(raw_data, recordings, compositions, artists, clients, iswcs, isrcs,
+         embedded, has_isrc, has_iswc, owns, performed, wrote):
+    data = HeteroData()
+
+    recordings['recordings_index'] = recordings.index
+    compositions['compositions_index'] = compositions.index
+    clients['clients_index'] = clients.index
+    artists['artists_index'] = artists.index
+    iswcs['iswcs_index'] = iswcs.index
+    isrcs['isrcs_index'] = isrcs.index
+
+    savez_compressed(osp.join(raw_data, 'test', 'iswcs.npz'), iswcs['iswc'].values)
+    savez_compressed(osp.join(raw_data, 'test', 'isrcs.npz'), isrcs['isrc'].values)
+    savez_compressed(osp.join(raw_data, 'test', 'artists.npz'), artists['name'].values)
+    savez_compressed(osp.join(raw_data, 'test', 'clients.npz'), clients['client_name'].values)
+    savez_compressed(osp.join(raw_data, 'test', 'recordings.npz'), recordings['recording_title'].values)
+    savez_compressed(osp.join(raw_data, 'test', 'compositions.npz'), compositions['composition_title'].values)
+
+    # embedded relation
+    embedded = embedded.merge(compositions[['share_asset_id', 'compositions_index']], on='share_asset_id')
+    embedded = embedded.merge(recordings[['assetID', 'recordings_index']], on='assetID')
+    embedded = embedded.drop(columns=['share_asset_id', 'assetID'])
+
+    # has_isrc relation
+    has_isrc = has_isrc.merge(recordings[['assetID', 'recordings_index']], on='assetID')
+    has_isrc = has_isrc.merge(isrcs[['isrc', 'isrcs_index']], on='isrc')
+    has_isrc = has_isrc.drop(columns=['assetID', 'isrc'])
+
+    # has_iswc relation
+    has_iswc = has_iswc.merge(compositions[['share_asset_id', 'compositions_index']], on='share_asset_id')
+    has_iswc = has_iswc.merge(iswcs[['iswc', 'iswcs_index']], on='iswc')
+    has_iswc = has_iswc.drop(columns=['share_asset_id', 'iswc'])
+
+    # owns relation
+    owns = owns.merge(clients[['client_name', 'clients_index']], on='client_name')
+    owns = owns.merge(compositions[['share_asset_id', 'compositions_index']], on='share_asset_id')
+    owns = owns.drop(columns=['share_asset_id', 'client_name', 'custom_id', 'share', 'policy'])
+
+    # performed relation
+    performed = performed.merge(artists[['name', 'artists_index']], on='name')
+    performed = performed.merge(recordings[['assetID', 'recordings_index']], on='assetID')
+    performed = performed.drop(columns=['name', 'assetID'])
+
+    # wrote relation
+    wrote = wrote.merge(artists[['name', 'artists_index']], on='name')
+    wrote = wrote.merge(compositions[['share_asset_id', 'compositions_index']], on='share_asset_id')
+    wrote = wrote.drop(columns=['share_asset_id', 'name'])
+
+    data['recording'].x = torch.from_numpy(recordings['recordings_index'].values)
+    data['composition'].x = torch.from_numpy(compositions['compositions_index'].values)
+    data['artist'].x = torch.from_numpy(artists['artists_index'].values)
+    data['client'].x = torch.from_numpy(clients['clients_index'].values)
+    data['isrc'].x = torch.from_numpy(isrcs['isrcs_index'].values)
+    data['iswc'].x = torch.from_numpy(iswcs['iswcs_index'].values)
+
+    print(f'Processing composition_embedded_recording relation...')
+    data[('composition', 'embedded', 'recording')].edge_index = torch.from_numpy(embedded.values).t().contiguous()
+
+    print(f'Processing recording_has_isrc_isrc relation...')
+    data[('recording', 'has_isrc', 'isrc')].edge_index = torch.from_numpy(has_isrc.values).t().contiguous()
+
+    print(f'Processing composition_has_iswc_iswc relation...')
+    data[('composition', 'has_iswc', 'iswc')].edge_index = torch.from_numpy(has_iswc.values).t().contiguous()
+
+    print(f'Processing client_owns_composition relation...')
+    data[('client', 'owns', 'composition')].edge_index = torch.from_numpy(owns.values).t().contiguous()
+
+    print(f'Processing artist_performed_recording relation...')
+    data[('artist', 'performed', 'recording')].edge_index = torch.from_numpy(performed.values).t().contiguous()
+
+    print(f'Processing artist_wrote_composition relation...')
+    data[('artist', 'wrote', 'composition')].edge_index = torch.from_numpy(wrote.values).t().contiguous()
+
+    transform = T.ToUndirected()
+    data = transform(data)
+
+    hetero_data_path = osp.join(raw_data, 'test', 'data.pt')
+    torch.save(data, hetero_data_path)
+    print(f'Hetero dataset was saved to {hetero_data_path}')
+
+
 def create_raw_graph_data_from_raw(sample_size: int, raw_data: str, raw_graph_data: str):
     print('Loading raw data...')
     recordings = pd.read_csv(osp.join(raw_data, 'recording.csv'))
-    recordings = recordings.dropna(subset=['recording_title'])
+    recordings = recordings.dropna(subset=['recording_title']).reset_index(drop=True)
+
     compositions = pd.read_csv(osp.join(raw_data, 'composition.csv'))
-    compositions = compositions.dropna(subset=['composition_title'])
+    compositions = compositions.dropna(subset=['composition_title']).reset_index(drop=True)
     clients = pd.read_csv(osp.join(raw_data, 'client.csv'))
+    artists = pd.read_csv(osp.join(raw_data, 'artist.csv'))
     iswcs = pd.read_csv(osp.join(raw_data, 'iswc.csv'))
     isrcs = pd.read_csv(osp.join(raw_data, 'isrc.csv'))
 
@@ -72,6 +156,12 @@ def create_raw_graph_data_from_raw(sample_size: int, raw_data: str, raw_graph_da
     performed = pd.read_csv(osp.join(raw_data, 'performed.csv'))
     wrote = pd.read_csv(osp.join(raw_data, 'wrote.csv'))
     neg_embedded = pd.read_csv(osp.join(raw_data, 'neg_embedded.csv'))
+
+    test(raw_data, recordings, compositions, artists, clients, iswcs, isrcs,
+         embedded, has_isrc, has_iswc, owns, performed, wrote)
+
+    import sys
+    sys.exit(-1)
 
     print(f'Sampling graph with base composition number {sample_size}')
     link_sample_graph(compositions=compositions, recordings=recordings, clients=clients, iswcs=iswcs, isrcs=isrcs,

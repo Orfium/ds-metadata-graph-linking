@@ -6,7 +6,7 @@ class Model:
     def __init__(self, config, dataset, dataloader):
         self.config = config
         self.model = GNN(config, dataset)
-        self.lazy_initialization(dataloader)
+        # self.lazy_initialization(dataloader)
 
     def __call__(self, *args, **kwargs):
         return self.model(*args, **kwargs)
