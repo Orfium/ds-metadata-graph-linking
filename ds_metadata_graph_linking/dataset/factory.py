@@ -122,7 +122,7 @@ def test(raw_data, recordings, compositions, artists, clients, iswcs, isrcs,
                                               left_on='RECORDING_ID', right_on='assetID', how='inner')
     proposed_matches = proposed_matches.merge(compositions[['share_asset_id', 'compositions_index']],
                                               left_on='COMPOSITION_ID', right_on='share_asset_id', how='inner')
-    proposed_matches[['compositions_index', 'recordings_index']].to_csv((osp.join(raw_data, 'proposed_matches.csv')),
+    proposed_matches[['compositions_index', 'recordings_index', 'STATUS']].to_csv((osp.join(raw_data, 'test/proposed_matches.csv')),
                                                                         index=False)
 
     savez_compressed(osp.join(raw_data, 'test', 'iswcs.npz'), iswcs['iswc'].values)
@@ -214,7 +214,7 @@ def create_raw_graph_data_from_raw(sample_size: int, raw_data: str, raw_graph_da
     performed = pd.read_csv(osp.join(raw_data, 'performed.csv'))
     wrote = pd.read_csv(osp.join(raw_data, 'wrote.csv'))
     # neg_embedded = pd.read_csv(osp.join(raw_data, 'neg_embedded.csv'))
-    proposed_matches = pd.read_csv(osp.join(raw_data, 'results_april_all_clients.csv'))[:150]
+    proposed_matches = pd.read_csv(osp.join(raw_data, 'test_proposed_matches.csv'))[:40]
 
     test(raw_data, recordings, compositions, artists, clients, iswcs, isrcs,
          embedded, has_isrc, has_iswc, owns, performed, wrote, proposed_matches)

@@ -29,10 +29,9 @@ def cli():
 
 import fasttext as fastt
 
-ft = fastt.load_model(
-    '/Users/stavros.giorgis/Desktop/workspace/ds-metadata-graph-linking/ds_metadata_graph_linking/featurizers/cc.en.300.bin')
+ft = fastt.load_model('cc.en.300.bin')
 
-raw_data = '/Users/stavros.giorgis/Desktop/workspace/ds-metadata-graph-linking/data/R2C/raw/test'
+raw_data = 'data/base_dataset/test'
 recordings = np.load(osp.join(raw_data, 'recordings.npz'), allow_pickle=True)['arr_0']
 compositions = np.load(osp.join(raw_data, 'compositions.npz'), allow_pickle=True)['arr_0']
 artists = np.load(osp.join(raw_data, 'artists.npz'), allow_pickle=True)['arr_0']
@@ -46,42 +45,42 @@ def generate_batch_embeddings(batch):
     batch_recordings = recordings[recording_x]
     recording_title_features = []
     for batch_recording in batch_recordings:
-        recording_title_features.append(ft.get_sentence_vector(batch_recording))
+        recording_title_features.append(ft.get_sentence_vector(str(batch_recording)))
     batch['recording'].x = torch.tensor(np.array(recording_title_features))
 
     composition_x = batch.x_dict['composition'].numpy()
     batch_compositions = compositions[composition_x]
     composition_title_features = []
     for batch_composition in batch_compositions:
-        composition_title_features.append(ft.get_sentence_vector(batch_composition))
+        composition_title_features.append(ft.get_sentence_vector(str(batch_composition)))
     batch['composition'].x = torch.tensor(np.array(composition_title_features))
 
     artist_x = batch.x_dict['artist'].numpy()
     batch_artists = artists[artist_x]
     artist_title_features = []
     for batch_artist in batch_artists:
-        artist_title_features.append(ft.get_sentence_vector(batch_artist))
+        artist_title_features.append(ft.get_sentence_vector(str(batch_artist)))
     batch['artist'].x = torch.tensor(np.array(artist_title_features))
 
     client_x = batch.x_dict['client'].numpy()
     batch_clients = clients[client_x]
     client_title_features = []
     for batch_client in batch_clients:
-        client_title_features.append(ft.get_sentence_vector(batch_client))
+        client_title_features.append(ft.get_sentence_vector(str(batch_client)))
     batch['client'].x = torch.tensor(np.array(client_title_features))
 
     isrc_x = batch.x_dict['isrc'].numpy()
     batch_isrcs = isrcs[isrc_x]
     isrc_features = []
     for batch_isrc in batch_isrcs:
-        isrc_features.append(ft.get_sentence_vector(batch_isrc))
+        isrc_features.append(ft.get_sentence_vector(str(batch_isrc)))
     batch['isrc'].x = torch.tensor(np.array(isrc_features))
 
     iswc_x = batch.x_dict['iswc'].numpy()
     batch_iswcs = iswcs[iswc_x]
     iswc_features = []
     for batch_iswc in batch_iswcs:
-        iswc_features.append(ft.get_sentence_vector(batch_iswc))
+        iswc_features.append(ft.get_sentence_vector(str(batch_iswc)))
     batch['iswc'].x = torch.tensor(np.array(iswc_features))
 
 
@@ -99,11 +98,13 @@ def val_entrypoint(dataset_path, neg_embedded_path, checkpoints_path):
     dataset = torch.load(dataset_path)
     print('Loaded dataset...')
 
-    proposed_matches = pd.read_csv(os.path.join(dataset_path, 'proposed_matches.csv'))
+    proposed_matches = pd.read_csv(os.path.join(raw_data, 'proposed_matches.csv'))
     print('Loaded proposed matches edges...')
+    pairs = proposed_matches[['compositions_index', 'recordings_index']]
+    labels = proposed_matches['STATUS'].tolist()
 
-    dataset[Edges.edge_to_predict].edge_label_index = torch.from_numpy(proposed_matches.values).t().contiguous()
-    dataset[Edges.edge_to_predict].edge_label = torch.zeros_like(dataset[Edges.edge_to_predict].edge_label_index)
+    dataset[Edges.edge_to_predict].edge_label_index = torch.from_numpy(pairs.values).t().contiguous()
+    dataset[Edges.edge_to_predict].edge_label = torch.FloatTensor(labels)
 
     edge_label_index = (Edges.edge_to_predict, dataset[Edges.edge_to_predict].edge_label_index)
     dataloader = create_dataloader(config=config,
@@ -132,6 +133,8 @@ def val_entrypoint(dataset_path, neg_embedded_path, checkpoints_path):
         logits = logits.detach().cpu()  # to stop tracking gradients
         predictions = infer_predictions_from_logits(logits).numpy()
         labels = edge_label.detach().cpu().numpy()
+        print(predictions)
+        print(labels)
 
         batch_fpr = 1 - recall_score(labels, predictions, pos_label=0)
         fpr_scores.append(batch_fpr)
