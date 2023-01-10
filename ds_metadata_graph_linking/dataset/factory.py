@@ -122,7 +122,8 @@ def test(raw_data, recordings, compositions, artists, clients, iswcs, isrcs,
                                               left_on='RECORDING_ID', right_on='assetID', how='inner')
     proposed_matches = proposed_matches.merge(compositions[['share_asset_id', 'compositions_index']],
                                               left_on='COMPOSITION_ID', right_on='share_asset_id', how='inner')
-    proposed_matches.to_csv((osp.join(raw_data, 'proposed_matches.csv')), index=False)
+    proposed_matches[['compositions_index', 'recordings_index']].to_csv((osp.join(raw_data, 'proposed_matches.csv')),
+                                                                        index=False)
 
     savez_compressed(osp.join(raw_data, 'test', 'iswcs.npz'), iswcs['iswc'].values)
     savez_compressed(osp.join(raw_data, 'test', 'isrcs.npz'), isrcs['isrc'].values)
