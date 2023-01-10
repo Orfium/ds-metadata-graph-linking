@@ -57,8 +57,59 @@ def create_dataloader(config, dataset, edge_label_index, neg_sampling_ratio=1, e
 
 
 def test(raw_data, recordings, compositions, artists, clients, iswcs, isrcs,
-         embedded, has_isrc, has_iswc, owns, performed, wrote):
+         embedded, has_isrc, has_iswc, owns, performed, wrote, proposed_matches):
     data = HeteroData()
+
+    from tqdm import tqdm
+
+    for index, row in tqdm(proposed_matches.iterrows()):
+        # check recording
+        recording_id = row['RECORDING_ID']
+        recording_isrc = row['ASSET_ISRC']
+        recording_artists = row['RECORDING_ARTISTS'].split(', ')
+        recording_title = row['RECORDING_TITLE']
+        artists['name_lowered'] = artists['name'].apply(lambda x: str(x).lower())
+
+        graph_recording = recordings[recordings['assetID'] == recording_id].index
+        if graph_recording.empty:
+            recordings.loc[len(recordings.index)] = [recording_title, recording_id, 0]
+        graph_recording = recordings[recordings['assetID'] == recording_id].index
+        if recording_isrc == recording_isrc:
+            graph_isrc = isrcs[isrcs['isrc'] == recording_isrc].index
+            if graph_isrc.empty:
+                isrcs.loc[len(isrcs.index)] = recording_isrc
+            graph_isrc = isrcs[isrcs['isrc'] == recording_isrc].index
+            has_isrc.loc[len(has_isrc.index)] = [graph_recording[0], graph_isrc[0]]
+        for recording_artist in recording_artists:
+            graph_artist = artists[artists['name_lowered'] == str(recording_artist).lower()].index
+            if graph_artist.empty:
+                artists.loc[len(artists.index)] = [recording_artist, str(recording_artist).lower()]
+            graph_artist = artists[artists['name_lowered'] == str(recording_artist).lower()].index
+            performed.loc[len(performed.index)] = [graph_artist[0], graph_recording[0]]
+
+        # check composition
+        composition_id = row['COMPOSITION_ID']
+        composition_artists = row['COMPOSITION_WRITERS'].split('/ ')
+        composition_title = row['COMPOSITION_TITLE']
+        client_name = row['DISPLAY_NAME']
+
+        graph_composition = compositions[compositions['share_asset_id'] == composition_id].index
+        if graph_composition.empty:
+            compositions.loc[len(compositions.index)] = [composition_id, composition_title]
+        graph_composition = compositions[compositions['share_asset_id'] == composition_id].index
+        for composition_artist in composition_artists:
+            graph_artist = artists[artists['name_lowered'] == str(composition_artist).lower()].index
+            if graph_artist.empty:
+                artists.loc[len(artists.index)] = [composition_artist, str(composition_artist).lower()]
+            graph_artist = artists[artists['name_lowered'] == str(composition_artist).lower()].index
+            wrote.loc[(len(wrote.index))] = [graph_artist[0], graph_composition[0]]
+        graph_client = clients[clients['client_name'] == client_name].index
+        if graph_client.empty:
+            clients.loc[len(clients.index)] = client_name
+        graph_client = clients[clients['client_name'] == client_name].index
+        owns.loc[len(owns.index)] = [graph_client[0], graph_composition[0], 0, 0, 0]
+
+        embedded.loc[len(embedded.index)] = [graph_composition[0], graph_recording[0]]
 
     recordings['recordings_index'] = recordings.index
     compositions['compositions_index'] = compositions.index
@@ -66,6 +117,12 @@ def test(raw_data, recordings, compositions, artists, clients, iswcs, isrcs,
     artists['artists_index'] = artists.index
     iswcs['iswcs_index'] = iswcs.index
     isrcs['isrcs_index'] = isrcs.index
+
+    proposed_matches = proposed_matches.merge(recordings[['assetID', 'recordings_index']],
+                                              left_on='RECORDING_ID', right_on='assetID', how='inner')
+    proposed_matches = proposed_matches.merge(compositions[['share_asset_id', 'compositions_index']],
+                                              left_on='COMPOSITION_ID', right_on='share_asset_id', how='inner')
+    proposed_matches.to_csv((osp.join(raw_data, 'proposed_matches.csv')), index=False)
 
     savez_compressed(osp.join(raw_data, 'test', 'iswcs.npz'), iswcs['iswc'].values)
     savez_compressed(osp.join(raw_data, 'test', 'isrcs.npz'), isrcs['isrc'].values)
@@ -155,10 +212,11 @@ def create_raw_graph_data_from_raw(sample_size: int, raw_data: str, raw_graph_da
     owns = pd.read_csv(osp.join(raw_data, 'owns.csv'))
     performed = pd.read_csv(osp.join(raw_data, 'performed.csv'))
     wrote = pd.read_csv(osp.join(raw_data, 'wrote.csv'))
-    neg_embedded = pd.read_csv(osp.join(raw_data, 'neg_embedded.csv'))
+    # neg_embedded = pd.read_csv(osp.join(raw_data, 'neg_embedded.csv'))
+    proposed_matches = pd.read_csv(osp.join(raw_data, 'results_april_all_clients.csv'))[:150]
 
     test(raw_data, recordings, compositions, artists, clients, iswcs, isrcs,
-         embedded, has_isrc, has_iswc, owns, performed, wrote)
+         embedded, has_isrc, has_iswc, owns, performed, wrote, proposed_matches)
 
     import sys
     sys.exit(-1)

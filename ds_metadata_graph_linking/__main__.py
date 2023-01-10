@@ -99,10 +99,10 @@ def val_entrypoint(dataset_path, neg_embedded_path, checkpoints_path):
     dataset = torch.load(dataset_path)
     print('Loaded dataset...')
 
-    neg_embedded = pd.read_csv(neg_embedded_path)
-    print('Loaded negative edges...')
+    proposed_matches = pd.read_csv(os.path.join(dataset_path, 'proposed_matches.csv'))
+    print('Loaded proposed matches edges...')
 
-    dataset[Edges.edge_to_predict].edge_label_index = torch.from_numpy(neg_embedded.values).t().contiguous()
+    dataset[Edges.edge_to_predict].edge_label_index = torch.from_numpy(proposed_matches.values).t().contiguous()
     dataset[Edges.edge_to_predict].edge_label = torch.zeros_like(dataset[Edges.edge_to_predict].edge_label_index)
 
     edge_label_index = (Edges.edge_to_predict, dataset[Edges.edge_to_predict].edge_label_index)
